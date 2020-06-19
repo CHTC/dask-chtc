@@ -11,8 +11,6 @@ import dask.array as da
 if __name__ == "__main__":
     shutil.rmtree("logs", ignore_errors=True)
 
-    pprint(dask.config.config)
-
     with HTCondorCluster(
         cores=1,
         memory="1 GB",
@@ -20,6 +18,7 @@ if __name__ == "__main__":
         log_directory="logs",
         silence_logs="debug",
         python="python3",
+        scheduler_options={"dashboard_address": "8786", "port": 8787},
         job_extra={
             "universe": "docker",
             "docker_image": sys.argv[1],
