@@ -1,7 +1,7 @@
 from dask.distributed import Client, LocalCluster
 import dask.array as da
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     with LocalCluster() as cluster, Client(cluster) as client:
         print(cluster)
 
