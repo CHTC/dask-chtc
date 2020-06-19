@@ -1,6 +1,7 @@
 import time
 import shutil
 from pprint import pprint
+import sys
 
 import dask
 from dask.distributed import Client, performance_report, progress
@@ -19,7 +20,12 @@ if __name__ == "__main__":
         log_directory="logs",
         silence_logs="debug",
         python="python3",
-        job_extra={"universe": "docker", "docker_image": "daskdev/dask:latest"},
+        job_extra={
+            "universe": "docker",
+            "docker_image": sys.argv[1],
+            "container_service_names": "dask",
+            "dask_container_port": "8787",
+        },
     ) as cluster, Client(cluster) as client:
         cluster.scale(10)
         time.sleep(5)
