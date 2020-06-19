@@ -18,12 +18,15 @@ if __name__ == "__main__":
         log_directory="logs",
         silence_logs="debug",
         python="python3",
-        scheduler_options={"dashboard_address": "8786", "port": 8787},
+        # dealing with CHTC quirks:
+        # we happen to have these ports open on submit3 for connection from machines that can see staging
+        scheduler_options={"dashboard_address": "3456", "port": 3457},
         job_extra={
             "universe": "docker",
             "docker_image": sys.argv[1],
             "container_service_names": "dask",
             "dask_container_port": "8787",
+            "requirements": "(Target.HasCHTCStaging)",
         },
     ) as cluster, Client(cluster) as client:
         cluster.scale(10)
