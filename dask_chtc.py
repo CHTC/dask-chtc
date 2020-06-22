@@ -11,8 +11,7 @@ import dask.array as da
 def CHTCCluster():
     shutil.rmtree("logs", ignore_errors=True)
 
-    worker_image, scheduler_port = sys.argv[1:]
-    scheduler_port = int(scheduler_port)
+    worker_image = sys.argv[1]
 
     with HTCondorCluster(
         cores=1,
@@ -20,7 +19,7 @@ def CHTCCluster():
         disk="1 GB",
         log_directory="logs",
         python="python3",
-        scheduler_options={"dashboard_address": "3400", "port": scheduler_port},
+        scheduler_options={"dashboard_address": "3400", "port": 3500},
         job_extra={
             "universe": "docker",
             "docker_image": worker_image,
