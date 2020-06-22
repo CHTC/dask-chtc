@@ -4,10 +4,11 @@ import sys
 from dask_jobqueue import HTCondorCluster
 
 
-def CHTCCluster():
+def CHTCCluster(worker_image=None):
     shutil.rmtree("logs", ignore_errors=True)
 
-    worker_image = sys.argv[1]
+    if worker_image is None:
+        worker_image = sys.argv[1]
 
     return HTCondorCluster(
         cores=1,
