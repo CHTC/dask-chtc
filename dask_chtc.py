@@ -1,19 +1,15 @@
 import shutil
 import sys
-import contextlib
 
-from dask.distributed import Client, performance_report
 from dask_jobqueue import HTCondorCluster
-import dask.array as da
 
 
-@contextlib.contextmanager
 def CHTCCluster():
     shutil.rmtree("logs", ignore_errors=True)
 
     worker_image = sys.argv[1]
 
-    with HTCondorCluster(
+    return HTCondorCluster(
         cores=1,
         memory="1 GB",
         disk="1 GB",
@@ -28,5 +24,4 @@ def CHTCCluster():
             "requirements": "(Target.HasCHTCStaging)",
             "keep_claim_idle": "3600",
         },
-    ) as cluster:
-        yield cluster
+    )
