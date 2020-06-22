@@ -1,51 +1,46 @@
-import time
 import shutil
-from pprint import pprint
 import sys
 
-import dask
-from dask.distributed import Client, performance_report, progress
+from dask.distributed import Client, performance_report
 from dask_jobqueue import HTCondorCluster
 import dask.array as da
 
 if __name__ == "__main__":
     shutil.rmtree("logs", ignore_errors=True)
 
+    worker_image, scheduler_port, num_workers = sys.argv[1:]
+    scheduler_port = int(scheduler_port)
+    num_workers = int(num_workers)
+
     with HTCondorCluster(
         cores=1,
         memory="1 GB",
         disk="1 GB",
         log_directory="logs",
-        silence_logs="debug",
         python="python3",
-        # dealing with CHTC quirks:
-        # we happen to have these ports open on submit3 for connection from machines that can see staging
-        scheduler_options={"dashboard_address": "3456", "port": 3457},
+        scheduler_options={"dashboard_address": "3456", "port": scheduler_port},
         job_extra={
             "universe": "docker",
-            "docker_image": sys.argv[1],
+            "docker_image": worker_image,
             "container_service_names": "dask",
             "dask_container_port": "8787",
             "requirements": "(Target.HasCHTCStaging)",
+            "keep_claim_idle": "3600",
         },
     ) as cluster, Client(cluster) as client:
-        cluster.scale(10)
-        time.sleep(5)
+        cluster.scale(num_workers)
 
         print(cluster)
 
         print(client)
 
         with performance_report(filename="report.html"):
-            x = da.random.random((10000, 10000), chunks=(100, 100))
+            x = da.random.random((10000, 10000), chunks=1000)
 
             y = (x ** 2).sum()
 
-            print(y)
+            print("\nCOMPUTATION", y, "\n")
 
             z = y.compute()
-            progress(z)
 
-            print(z)
-
-        time.sleep(5)
+            print("\nRESULT", z, "\n")
