@@ -4,7 +4,9 @@ import sys
 from dask_jobqueue import HTCondorCluster
 
 
-def CHTCCluster(worker_image=None, gpus=False):
+def CHTCCluster(
+    worker_image=None, gpus=False, scheduler_port=3500, dashboard_port=3400
+):
     shutil.rmtree("logs", ignore_errors=True)
 
     if worker_image is None:
@@ -18,9 +20,10 @@ def CHTCCluster(worker_image=None, gpus=False):
         "requirements": "(Target.HasCHTCStaging)",
         "keep_claim_idle": "600",
         "My.IsDaskWorker": "true",
-        "My.wantFlocking": "true",
         "JobBatchName": "dask-worker",
     }
+
+    request_memory = "1 GB"
 
     if gpus:
         job_extra.update(
@@ -32,12 +35,17 @@ def CHTCCluster(worker_image=None, gpus=False):
             }
         )
 
+        request_memory = "4 GB"
+
     return HTCondorCluster(
         cores=1,
-        memory="1 GB",
-        disk="1 GB",
+        memory=request_memory,
+        disk="10 GB",
         log_directory="logs",
         python="python3",
-        scheduler_options={"dashboard_address": "3400", "port": 3500},
+        scheduler_options={
+            "dashboard_address": str(dashboard_port),
+            "port": scheduler_port,
+        },
         job_extra=job_extra,
     )

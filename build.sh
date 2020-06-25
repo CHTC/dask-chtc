@@ -2,7 +2,7 @@
 
 set -e
 
-TAG=maventree/dask-worker:$1
+TAG=$1
 
 docker build --pull -t "${TAG}" docker/worker
 docker push "${TAG}"
