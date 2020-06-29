@@ -1,11 +1,6 @@
 FROM pytorch/pytorch:1.1.0-cuda10.0-cudnn7.5-runtime
 
-COPY entrypoint.sh /.entrypoint.sh
-RUN chmod +x /.entrypoint.sh
-
 COPY logging.yaml ${HOME}/.config/dask/logging.yaml
-
-ENTRYPOINT ["tini", "-g", "--", "/.entrypoint.sh"]
 
 RUN : \
  && conda install --yes \

@@ -37,7 +37,7 @@ def CHTCCluster(
 
         request_memory = "4 GB"
 
-    return HTCondorCluster(
+    cluster = HTCondorCluster(
         cores=1,
         memory=request_memory,
         disk="10 GB",
@@ -48,4 +48,9 @@ def CHTCCluster(
             "port": scheduler_port,
         },
         job_extra=job_extra,
+        extra=["--listen-address", "tcp://0.0.0.0:8787"],
     )
+
+    cluster.executable = "entrypoint.sh"
+
+    return cluster
