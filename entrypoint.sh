@@ -31,11 +31,5 @@ echo "HOST is $HOST"
 echo "PORT is $PORT"
 echo
 
-# strip off "-c" added by dask-jobqueue's HTCondorCluster
-# https://github.com/dask/dask-jobqueue/blob/master/dask_jobqueue/htcondor.py#L113
-shift
-
 # Add contact address to tell the scheduler where to contact us.
-# Add listen address to tell ourselves to listen inside the container,
-# instead of automatic discovery, which would try to use the host network.
 exec $@ --contact-address tcp://"$HOST":"$PORT"

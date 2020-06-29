@@ -18,6 +18,7 @@ def CHTCCluster(
         "container_service_names": "dask",
         "dask_container_port": "8787",
         "requirements": "(Target.HasCHTCStaging)",
+        "transfer_input_files": "entrypoint.sh",
         "keep_claim_idle": "600",
         "My.IsDaskWorker": "true",
         "JobBatchName": "dask-worker",
@@ -42,7 +43,7 @@ def CHTCCluster(
         memory=request_memory,
         disk="10 GB",
         log_directory="logs",
-        python="python3",
+        python="./entrypoint.sh python3",
         scheduler_options={
             "dashboard_address": str(dashboard_port),
             "port": scheduler_port,
@@ -50,7 +51,5 @@ def CHTCCluster(
         job_extra=job_extra,
         extra=["--listen-address", "tcp://0.0.0.0:8787"],
     )
-
-    cluster.executable = "entrypoint.sh"
 
     return cluster
