@@ -37,7 +37,7 @@ MANIFEST
 pip-log.txt
 pip-delete-this-directory.txt
 
-# Unit test / coverage reports
+# Unit test.sh / coverage reports
 htmlcov/
 .tox/
 .nox/
@@ -129,4 +129,6 @@ dmypy.json
 .pyre/
 
 .idea/
+.vscode/
+
 dask-worker-space/
