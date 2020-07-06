@@ -1,5 +1,6 @@
 # Dask at CHTC Demo
 
+![tests](https://github.com/JoshKarpel/dask-chtc/workflows/tests/badge.svg)
 ![GitHub issues](https://img.shields.io/github/issues/JoshKarpel/dask-chtc)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/JoshKarpel/dask-chtc)
 
