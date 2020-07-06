@@ -1,7 +1,7 @@
 # Dask at CHTC Demo
 
-![GitHub issues](https://img.shields.io/github/issues/JoshKarpel/dask-at-chtc)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/JoshKarpel/dask-at-chtc)
+![GitHub issues](https://img.shields.io/github/issues/JoshKarpel/dask-chtc)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/JoshKarpel/dask-chtc)
 
 This repository holds the demo materials for my "Dask at CHTC" demo for the
 Morgridge Research Computing Virtual Brown Bag Lunch on 2020-06-25.
