@@ -1,7 +1,8 @@
-try:
+import sys
+
+if sys.version_info[:2] >= (3, 8):
     from importlib import metadata
-except ImportError:
-    # Running on pre-3.8 Python; use importlib-metadata package
+else:
     import importlib_metadata as metadata
 
 

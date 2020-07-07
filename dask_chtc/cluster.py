@@ -3,7 +3,7 @@ import datetime
 import logging
 import os
 from pathlib import Path
-from typing import Iterable, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from dask_jobqueue import HTCondorCluster
 
@@ -25,7 +25,7 @@ class CHTCCluster(HTCondorCluster):
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
         python: str = "./entrypoint.sh python3",
-        **kwargs,
+        **kwargs: Any,
     ):
         kwargs = self._modify_kwargs(
             kwargs, worker_image=worker_image, input_files=input_files, gpu_lab=gpu_lab, gpus=gpus,
@@ -35,13 +35,13 @@ class CHTCCluster(HTCondorCluster):
 
     @staticmethod
     def _modify_kwargs(
-        kwargs,
+        kwargs: Dict[str, Any],
         *,
         worker_image: Optional[str] = None,
         input_files: Optional[Iterable[os.PathLike]] = None,
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
-    ):
+    ) -> Dict[str, Any]:
         modified = kwargs.copy()
 
         # These get forward to the Dask scheduler
@@ -51,8 +51,10 @@ class CHTCCluster(HTCondorCluster):
             kwargs.get("scheduler_options"),
         )
 
-        input_files = [ENTRYPOINT_SCRIPT_PATH] + list(input_files or [])
+        input_files = list(input_files or [])
+        input_files.insert(0, ENTRYPOINT_SCRIPT_PATH)
         tif = ", ".join(Path(path).absolute().as_posix() for path in input_files)
+
         # These get put in the HTCondor job submit description
         modified["job_extra"] = merge(
             # Run workers in Docker universe
@@ -66,6 +68,8 @@ class CHTCCluster(HTCondorCluster):
             {"transfer_input_files": tif},
             # GPULab and general GPU setup
             {"My.WantGPULab": "true", "My.GPUJobLength": '"short"'} if gpu_lab else None,
+            # Request however many GPUs they want,
+            # or 1 if they selected GPULab but didn't say how many they want
             {"request_gpus": str(gpus) if gpus is not None else "1"}
             if gpus is not None or gpu_lab
             else None,
@@ -77,8 +81,6 @@ class CHTCCluster(HTCondorCluster):
             kwargs.get("job_extra"),
             # Overrideable utility/convenience attributes
             {"JobBatchName": "dask-worker", "keep_claim_idle": str(TEN_MINUTES)},
-            # Request however many GPUs they want,
-            # or 1 if they selected GPULab but didn't say how many they want
         )
 
         # These get tacked on to the command that starts the worker as arguments
@@ -91,7 +93,7 @@ class CHTCCluster(HTCondorCluster):
         return modified
 
 
-def merge(*mappings: Mapping) -> Mapping:
+def merge(*mappings: Optional[Mapping[Any, Any]]) -> Mapping[Any, Any]:
     """
     Merge the given mappings into a single mapping.
     Mappings given earlier in the list have precedence over those given later.
