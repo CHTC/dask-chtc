@@ -21,21 +21,26 @@ class CHTCCluster(HTCondorCluster):
         self,
         *,
         worker_image: Optional[str] = None,
-        transfer_input_files: Optional[Iterable[os.PathLike]] = None,
-        use_gpus: bool = False,
+        input_files: Optional[Iterable[os.PathLike]] = None,
+        gpu_lab: bool = False,
+        gpus: Optional[int] = None,
         python: str = "./entrypoint.sh python3",
         **kwargs,
     ):
-        kwargs = self._modify_kwargs(kwargs, worker_image, transfer_input_files, use_gpus)
+        kwargs = self._modify_kwargs(
+            kwargs, worker_image=worker_image, input_files=input_files, gpu_lab=gpu_lab, gpus=gpus,
+        )
 
         super().__init__(python=python, **kwargs)
 
     @staticmethod
     def _modify_kwargs(
         kwargs,
+        *,
         worker_image: Optional[str] = None,
-        transfer_input_files: Optional[Iterable[os.PathLike]] = None,
-        use_gpus: bool = False,
+        input_files: Optional[Iterable[os.PathLike]] = None,
+        gpu_lab: bool = False,
+        gpus: Optional[int] = None,
     ):
         modified = kwargs.copy()
 
@@ -46,37 +51,39 @@ class CHTCCluster(HTCondorCluster):
             kwargs.get("scheduler_options"),
         )
 
-        transfer_input_files = [ENTRYPOINT_SCRIPT_PATH] + list(transfer_input_files or [])
+        input_files = [ENTRYPOINT_SCRIPT_PATH] + list(input_files or [])
+        tif = ", ".join(Path(path).absolute().as_posix() for path in input_files)
         # These get put in the HTCondor job submit description
         modified["job_extra"] = merge(
             # Run workers in Docker universe
             {"universe": "docker", "docker_image": worker_image or "daskdev/dask:latest"},
-            # Workers can only run on certain execute nodes
-            {"requirements": "(Target.HasCHTCStaging)"},
             # Set up port forwarding from the container
             # 8787 will be the port inside the container
             # We won't know the port outside the container (the "host port")
-            # until the job starts
+            # until the job starts; see entrypoint.sh for details
             {"container_service_names": "dask", "dask_container_port": "8787"},
-            # Transfer the custom entrypoint script
-            {"transfer_input_files": ", ".join(path.as_posix() for path in transfer_input_files)},
-            # Support attributes for CHTC to gather usage data
+            # Transfer our internals and whatever else the user requested
+            {"transfer_input_files": tif},
+            # GPULab and general GPU setup
+            {"My.WantGPULab": "true", "My.GPUJobLength": '"short"'} if gpu_lab else None,
+            {"request_gpus": str(gpus) if gpus is not None else "1"}
+            if gpus is not None or gpu_lab
+            else None,
+            # Workers can only run on certain execute nodes
+            {"requirements": "(Target.HasCHTCStaging)"},
+            # Support attributes to gather usage data
             {"My.IsDaskWorker": "true"},
-            # GPU setup
-            {"request_gpus": "1", "My.WantGPULab": "true", "My.GPUJobLength": '"short"'}
-            if use_gpus
-            else {},
             # Capture anything the user passed in.
             kwargs.get("job_extra"),
             # Overrideable utility/convenience attributes
-            {
-                "JobBatchName": "dask-worker" if not use_gpus else "dask-worker-gpus",
-                "keep_claim_idle": TEN_MINUTES,
-            },
+            {"JobBatchName": "dask-worker", "keep_claim_idle": str(TEN_MINUTES)},
+            # Request however many GPUs they want,
+            # or 1 if they selected GPULab but didn't say how many they want
         )
 
         # These get tacked on to the command that starts the worker as arguments
-        modified["extra"] = kwargs.get("extra", []) + [
+        modified["extra"] = [
+            *kwargs.get("extra", []),
             "--listen-address",
             "tcp://0.0.0.0:8787",
         ]

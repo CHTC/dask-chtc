@@ -8,7 +8,7 @@ target-version = ["py36", "py37", "py38"]
 include = "\\.pyi?$"
 
 [tool.isort]
-known_third_party = ["dask_jobqueue", "setuptools"]
+known_third_party = ["dask_jobqueue", "pytest", "setuptools"]
 
 [tool.pytest.ini_options]
 testspaths = ["test"]
