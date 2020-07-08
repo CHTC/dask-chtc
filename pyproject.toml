@@ -8,7 +8,9 @@ target-version = ["py36", "py37", "py38"]
 include = "\\.pyi?$"
 
 [tool.isort]
-known_third_party = ["dask_jobqueue", "pytest", "setuptools"]
+known_third_party = ["click", "click_didyoumean", "dask", "dask_jobqueue", "pytest", "setuptools", "yaml"]
+line_length = 100
+multi_line_output = "VERTICAL_HANGING_INDENT"
 
 [tool.pytest.ini_options]
 testspaths = ["test"]

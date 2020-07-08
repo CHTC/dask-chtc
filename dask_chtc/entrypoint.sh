@@ -7,7 +7,8 @@ echo "Incoming command is:"
 echo "$@"
 echo
 
-# wait for the job ad to be updated with <service>_HostPort
+# Wait for the job ad to be updated with <service>_HostPort
+# This happens during the first update, usually a few seconds after the job starts
 echo "Waiting for HostPort information..."
 while true; do
   if grep HostPort "$_CONDOR_JOB_AD"; then
@@ -25,11 +26,12 @@ echo
 # Get host and port information from the job ad.
 # Because we are inside a Docker container and not on the host network,
 # we need to tell the scheduler how to contact us.
+# (It isn't the address we would naively detect from inside!)
 HOST=$(grep RemoteHost "$_CONDOR_JOB_AD" | tr -d '"' | tr '@' ' ' | awk '{print $NF;}')
 PORT=$(grep HostPort "$_CONDOR_JOB_AD" | tr -d '"' | awk '{print $NF;}')
 echo "HOST is $HOST"
 echo "PORT is $PORT"
 echo
 
-# Add contact address to tell the scheduler where to contact us.
+# Add the contact address we calculated above the worker arguments.
 exec "$@" --contact-address tcp://"$HOST":"$PORT"

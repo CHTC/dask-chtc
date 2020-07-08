@@ -2,11 +2,12 @@ import collections
 import datetime
 import logging
 import math
-import os
 from pathlib import Path
-from typing import Any, Dict, Iterable, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional
 
+import dask
 from dask_jobqueue import HTCondorCluster
+from dask_jobqueue.htcondor import HTCondorJob
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -20,44 +21,78 @@ DEFAULT_SCHEDULER_PORT = 3500
 DEFAULT_DASHBOARD_PORT = 3501
 
 
+class CHTCJob(HTCondorJob):
+    config_name = "chtc"
+
+
 class CHTCCluster(HTCondorCluster):
+    config_name = "chtc"
+    job_cls = CHTCJob
+
     def __init__(
         self,
         *,
-        cores: int = 1,
-        memory: str = "1 GB",
-        disk: str = "10 GB",
         worker_image: Optional[str] = None,
-        input_files: Optional[Iterable[os.PathLike]] = None,
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
         scheduler_port: int = DEFAULT_SCHEDULER_PORT,
         dashboard_port: int = DEFAULT_DASHBOARD_PORT,
+        batch_name: Optional[str] = None,
         python: str = "./entrypoint.sh python3",
         **kwargs: Any,
     ):
+        """
+        Parameters
+        ----------
+        worker_image
+            The Docker image to run the Dask workers inside.
+            Defaults to ``daskdev/dask:latest``
+            (https://hub.docker.com/r/daskdev/dask).
+        gpu_lab
+            If ``True``, workers will be allowed to run on GPULab nodes.
+            If this is ``True``, the default value of ``gpus`` becomes ``1``.
+            Defaults to ``False``.
+        gpus
+            The number of GPUs to request.
+            Defaults to 0 unless ``gpu_lab = True``,
+            in which case the default is ``1``.
+        scheduler_port
+        dashboard_port
+        batch_name
+            The HTCondor JobBatchName to assign to the worker jobs.
+            This can be helpful for more sensible output for *condor_q*.
+            Defaults to ``"dask-worker"``.
+        python
+            The command to execute to start Python inside the worker job.
+            Only modify this if you know what you're doing!
+        kwargs
+            Additional keyword arguments,
+            like ``cores`` or ``memory``,
+            are passed to :class:`dask_jobqueue.HTCondorCluster`.
+        """
         kwargs = self._modify_kwargs(
             kwargs,
             worker_image=worker_image,
-            input_files=input_files,
             gpu_lab=gpu_lab,
             gpus=gpus,
             scheduler_port=scheduler_port,
             dashboard_port=dashboard_port,
+            batch_name=batch_name,
         )
 
-        super().__init__(cores=cores, memory=memory, disk=disk, python=python, **kwargs)
+        super().__init__(python=python, **kwargs)
 
-    @staticmethod
+    @classmethod
     def _modify_kwargs(
+        cls,
         kwargs: Dict[str, Any],
         *,
         worker_image: Optional[str] = None,
-        input_files: Optional[Iterable[os.PathLike]] = None,
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
         scheduler_port: int = DEFAULT_SCHEDULER_PORT,
         dashboard_port: int = DEFAULT_DASHBOARD_PORT,
+        batch_name: Optional[str] = None,
     ) -> Dict[str, Any]:
         modified = kwargs.copy()
 
@@ -65,17 +100,26 @@ class CHTCCluster(HTCondorCluster):
         modified["scheduler_options"] = merge(
             {"port": scheduler_port, "dashboard_address": str(dashboard_port)},
             # Capture anything the user passed in.
-            kwargs.get("scheduler_options"),
+            kwargs.get(
+                "scheduler_options",
+                dask.config.get(f"jobqueue.{cls.config_name}.scheduler-options"),
+            ),
         )
 
-        input_files = list(input_files or [])
-        input_files.insert(0, ENTRYPOINT_SCRIPT_PATH)
+        # TODO: do we allow arbitrary input file transfer?
+        input_files = [ENTRYPOINT_SCRIPT_PATH]
         tif = ", ".join(Path(path).absolute().as_posix() for path in input_files)
 
         # These get put in the HTCondor job submit description.
+        gpus = gpus or dask.config.get(f"jobqueue.{cls.config_name}.gpus")
+        gpu_lab = gpu_lab or dask.config.get(f"jobqueue.{cls.config_name}.gpu-lab")
         modified["job_extra"] = merge(
             # Run workers in Docker universe.
-            {"universe": "docker", "docker_image": worker_image or "daskdev/dask:latest"},
+            {
+                "universe": "docker",
+                "docker_image": worker_image
+                or dask.config.get(f"jobqueue.{cls.config_name}.worker-image"),
+            },
             # Set up container port forwarding.
             # We won't know the port outside the container (the "host port")
             # until the job starts; see entrypoint.sh for details.
@@ -97,12 +141,12 @@ class CHTCCluster(HTCondorCluster):
             # Support attributes to gather usage data.
             {"My.IsDaskWorker": "true"},
             # Capture anything the user passed in.
-            kwargs.get("job_extra"),
+            kwargs.get("job_extra", dask.config.get(f"jobqueue.{cls.config_name}.job-extra")),
             # Overrideable utility/convenience attributes.
             {
                 # This will cause the workers to be grouped in condor_q, with a reasonable name.
-                "JobBatchName": "dask-worker",
-                # Keep worker claims idle briefly for fast reconnects.
+                "JobBatchName": f'"{batch_name or dask.config.get(f"jobqueue.{cls.config_name}.batch-name")}"',
+                # Keep worker claims idle briefly for fast restarts.
                 "keep_claim_idle": seconds(minutes=10),
                 # Higher-than-default job priority.
                 "priority": "1",
@@ -111,7 +155,8 @@ class CHTCCluster(HTCondorCluster):
 
         # These get tacked on to the command that starts the worker as arguments.
         modified["extra"] = [
-            *kwargs.get("extra", []),
+            # Capture anything the user passed in.
+            *kwargs.get("extra", dask.config.get(f"jobqueue.{cls.config_name}.extra")),
             # Bind to port inside the container, per dask_container_port above.
             "--listen-address",
             f"tcp://0.0.0.0:{PORT_INSIDE_CONTAINER}",
