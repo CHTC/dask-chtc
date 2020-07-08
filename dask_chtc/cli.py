@@ -79,20 +79,20 @@ def path():
     default=False,
     help="Show the parsed Dask config instead of the contents of the configuration file.",
 )
-def show(parsed):
+def show(parsed, diff):
     """
     Show the contents of the configuration file.
 
-    Can also be used to show what Dask actually parsed
-    from the configuration file by adding the --parse option.
+    To show what Dask actually parsed from the configuration file,
+    add the --parsed option.
     """
 
     if parsed:
-        text = pformat(dask.config.get(f"jobqueue.{CHTCCluster.config_name}"), indent=2)
+        user_config_text = pformat(dask.config.get(f"jobqueue.{CHTCCluster.config_name}"), indent=2)
     else:
-        text = _user_config_file_path().read_text()
+        user_config_text = _user_config_file_path().read_text()
 
-    click.echo_via_pager(text)
+    click.echo_via_pager(user_config_text)
 
 
 @config.command()
