@@ -65,6 +65,14 @@ def config():
 
 
 @config.command()
+def path():
+    """
+    Echo the path to the configuration file.
+    """
+    click.echo(_user_config_file_path())
+
+
+@config.command()
 @click.option(
     "--parsed",
     is_flag=True,

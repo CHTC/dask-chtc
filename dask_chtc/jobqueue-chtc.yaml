@@ -3,11 +3,11 @@ jobqueue:
     name: dask-worker
 
     # Worker job resource requests and other options.
-    cores: 1               # Number of cores per worker job
-    gpus: null             # Number of GPUs per worker job
-    memory: "1 GB"         # Amount of memory per worker job
-    disk: "10 GB"          # Amount of disk per worker job
-    processes: null        # Number of Python processes for each worker (null lets Dask decide)
+    cores: 1                # Number of cores per worker job
+    gpus: null              # Number of GPUs per worker job
+    memory: "1 GiB"         # Amount of memory per worker job
+    disk: "10 GiB"          # Amount of disk per worker job
+    processes: null         # Number of Python processes for each worker (null lets Dask decide)
     local-directory: null
 
     # Whether to use GPULab machines.
