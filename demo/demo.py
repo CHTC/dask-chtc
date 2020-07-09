@@ -1,9 +1,9 @@
-from sklearn.datasets import make_circles
-from sklearn.utils import check_random_state
 import numpy as np
 import pandas as pd
-from sklearn.preprocessing import StandardScaler
+from sklearn.datasets import make_circles
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.utils import check_random_state
 
 
 def make_hyperparameter_optimization_problem():
@@ -21,9 +21,7 @@ def make_hyperparameter_optimization_problem():
 
 
 def make_train_test(X, y):
-    X_train, X_test, y_train, y_test = train_test_split(
-        X, y, test_size=5_000, random_state=42
-    )
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=5_000, random_state=42)
 
     scaler = StandardScaler().fit(X_train)
 
