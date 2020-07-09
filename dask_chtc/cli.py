@@ -1,3 +1,4 @@
+import io
 import logging
 import sys
 import time
@@ -128,21 +129,32 @@ def reset():
     _ensure_user_config_file()
 
 
+JUPYTER_LOGS_DIR = Path.home() / ".dask-chtc" / "jupyter-logs"
+
+
 @cli.command(context_settings=dict(ignore_unknown_options=True))
 @click.argument("jupyter_args", nargs=-1, type=click.UNPROCESSED)
 def jupyter(jupyter_args):
-    logs_dir = Path.home() / ".dask-chtc" / "jupyter-logs"
-    out = logs_dir / "current.out"
-    err = logs_dir / "current.err"
-    event_log = logs_dir / "currents.events"
+    """
+    Launch a Jupyter notebook server as an HTCondor job.
 
-    logs_dir.mkdir(parents=True, exist_ok=True)
+    All arguments after "jupyter" will be forwarded to Jupyter.
+    For example, to start Jupyter Lab on some known port, you could run
+
+        dask-chtc jupyter lab --port 3456
+    """
+    stamp = int(time.time())
+    out = JUPYTER_LOGS_DIR / f"current-{stamp}.out"
+    err = JUPYTER_LOGS_DIR / f"current-{stamp}.err"
+    event_log = JUPYTER_LOGS_DIR / f"currents-{stamp}.events"
+
+    JUPYTER_LOGS_DIR.mkdir(parents=True, exist_ok=True)
     for p in (out, err, event_log):
         p.unlink(missing_ok=True)
         p.touch()
 
     arguments = " ".join(["-m", "jupyter", *jupyter_args, "--no-browser", "-y"])
-    logger.debug(f"HTCondor job will run: {sys.executable} {arguments}")
+    logger.debug(f"HTCondor job will run this command: {sys.executable} {arguments}")
     sub = htcondor.Submit(
         {
             "universe": "local",
@@ -165,8 +177,8 @@ def jupyter(jupyter_args):
     with RunLocalUniverseJob(sub) as job:
         with out.open(mode="r") as out_file, err.open(mode="r") as err_file:
             observer = Observer()
-            observer.schedule(EchoingEventHandler(out_file, color="bright_white"), path=str(out))
-            observer.schedule(EchoingEventHandler(err_file, color="bright_white"), path=str(err))
+            observer.schedule(EchoingEventHandler(out_file), path=str(out))
+            observer.schedule(EchoingEventHandler(err_file), path=str(err))
             observer.start()
 
             jel = htcondor.JobEventLog(event_log.as_posix())
@@ -180,9 +192,9 @@ def jupyter(jupyter_args):
             observer.stop()
 
     stamp = int(time.time())
-    out.rename(logs_dir / f"previous-{stamp}.out")
-    err.rename(logs_dir / f"previous-{stamp}.err")
-    event_log.rename(logs_dir / f"previous-{stamp}.events")
+    out.rename(JUPYTER_LOGS_DIR / f"previous-{stamp}.out")
+    err.rename(JUPYTER_LOGS_DIR / f"previous-{stamp}.err")
+    event_log.rename(JUPYTER_LOGS_DIR / f"previous-{stamp}.events")
 
 
 def watch_job_events(events):
@@ -203,7 +215,7 @@ class EchoingEventHandler(events.FileSystemEventHandler):
         self.file = file
         self.color = color
 
-    def on_modified(self, event):
+    def on_modified(self, event: events.FileSystemEvent):
         for line in self.file:
             click.secho(line.rstrip(), fg=self.color, err=True)
 
@@ -213,20 +225,22 @@ class RunLocalUniverseJob:
         self.submit_description = submit_description
         self.cluster_id: Optional[int] = None
 
-    def __enter__(self):
+    def start(self) -> None:
         schedd = htcondor.Schedd()
         with schedd.transaction() as txn:
             self.cluster_id = self.submit_description.queue(txn)
         logger.debug(f"Submitted job with cluster ID {self.cluster_id}")
 
-        return self
-
-    def rm(self):
+    def rm(self) -> None:
         try:
             schedd = htcondor.Schedd()
             schedd.act(htcondor.JobAction.Remove, [f"{self.cluster_id}.0"], "Shut down Jupyter")
-        except:
+        except Exception:
             logger.exception(f"Failed to remove local universe job!")
+
+    def __enter__(self):
+        self.start()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.rm()
