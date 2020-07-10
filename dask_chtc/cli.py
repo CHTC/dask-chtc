@@ -174,7 +174,6 @@ def run(jupyter_args):
 
         dask-chtc jupyter run lab --port 3456
     """
-
     with JupyterJobManager().launch(jupyter_args) as manager:
         try:
             manager.watch_events()
@@ -233,6 +232,9 @@ def stop():
 def status(raw):
     """
     Get information about your running Jupyter notebook server.
+
+    If you have launched a Jupyter notebook server in the past and need to
+    find it's address again, use this command.
     """
     now = datetime.utcnow().replace(tzinfo=timezone.utc)
 
@@ -371,7 +373,7 @@ class JupyterJobManager:
 
         self.out = self.logs_dir / f"current.out"
         self.err = self.logs_dir / f"current.err"
-        self.event_log = self.logs_dir / f"currents.events"
+        self.event_log = self.logs_dir / f"current.events"
 
         self.cluster_id: Optional[int] = None
         self.events: Optional[htcondor.JobEventLog] = None
