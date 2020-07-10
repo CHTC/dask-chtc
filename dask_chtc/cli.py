@@ -510,7 +510,7 @@ class JupyterJobManager:
             # Path.unlink(missing_ok=True) wasn't added until Python 3.8
             if p.exists():
                 p.unlink()
-                p.touch()
+            p.touch(exist_ok=True)
 
     def rotate_files(self) -> int:
         stamp = int(time.time())
