@@ -31,6 +31,16 @@ T_PORT_ARG = Union[int, Iterable[int]]
 
 
 class CHTCCluster(HTCondorCluster):
+    """
+    A customized :class:`dask_jobqueue.HTCondorCluster` for
+    spawning Dask workers
+    in the CHTC HTCondor pool.
+
+    It provides a variety of custom arguments designed around the CHTC pool,
+    and forwards any remaining arguments to
+    :class:`dask_jobqueue.HTCondorCluster`.
+    """
+
     config_name = "chtc"
     job_cls = CHTCJob
 
@@ -111,6 +121,13 @@ class CHTCCluster(HTCondorCluster):
         dashboard_port: T_PORT_ARG = DEFAULT_DASHBOARD_PORT,
         batch_name: Optional[str] = None,
     ) -> Dict[str, Any]:
+        """
+        This method implements the various special modifications we make to
+        adapt dask-jobqueue to run on CHTC resources.
+
+        See this class's __init__ method for details on the meanings of the
+        arguments, and the comments in this method for everything else.
+        """
         modified = kwargs.copy()
 
         if isinstance(scheduler_port, int):
