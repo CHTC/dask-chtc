@@ -2,10 +2,12 @@ import collections
 import datetime
 import logging
 import math
+import random
 from pathlib import Path
-from typing import Any, Dict, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Union
 
 import dask
+import psutil
 from dask_jobqueue import HTCondorCluster
 from dask_jobqueue.htcondor import HTCondorJob
 
@@ -17,15 +19,28 @@ PACKAGE_DIR = Path(__file__).parent
 ENTRYPOINT_SCRIPT_PATH = (PACKAGE_DIR / "entrypoint.sh").absolute()
 
 PORT_INSIDE_CONTAINER = 8787
-DEFAULT_SCHEDULER_PORT = 3500
-DEFAULT_DASHBOARD_PORT = 3501
+DEFAULT_SCHEDULER_PORT = range(3100, 3500)
+DEFAULT_DASHBOARD_PORT = range(3500, 3900)
 
 
 class CHTCJob(HTCondorJob):
     config_name = "chtc"
 
 
+T_PORT_ARG = Union[int, Iterable[int]]
+
+
 class CHTCCluster(HTCondorCluster):
+    """
+    A customized :class:`dask_jobqueue.HTCondorCluster` for
+    spawning Dask workers
+    in the CHTC HTCondor pool.
+
+    It provides a variety of custom arguments designed around the CHTC pool,
+    and forwards any remaining arguments to
+    :class:`dask_jobqueue.HTCondorCluster`.
+    """
+
     config_name = "chtc"
     job_cls = CHTCJob
 
@@ -35,8 +50,8 @@ class CHTCCluster(HTCondorCluster):
         worker_image: Optional[str] = None,
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
-        scheduler_port: int = DEFAULT_SCHEDULER_PORT,
-        dashboard_port: int = DEFAULT_DASHBOARD_PORT,
+        scheduler_port: T_PORT_ARG = DEFAULT_SCHEDULER_PORT,
+        dashboard_port: T_PORT_ARG = DEFAULT_DASHBOARD_PORT,
         batch_name: Optional[str] = None,
         python: str = "./entrypoint.sh python3",
         **kwargs: Any,
@@ -57,7 +72,19 @@ class CHTCCluster(HTCondorCluster):
             Defaults to 0 unless ``gpu_lab = True``,
             in which case the default is ``1``.
         scheduler_port
+            The port (or range of ports) to use for the Dask scheduler
+            to communicate with the workers.
+            If you want to customize this, keep in mind that
+            only certain ports are usable due to CHTC's infrastructure
+            (the default is a reasonable range)
+            and that you must provide a large enough range to find an unused
+            port, or the scheduler will not be able to start up.
+            You do not need to forward the scheduler port via SSH.
+            We do not recommend changing the default!
         dashboard_port
+            The port (or range of ports) to use for the Dask scheduler's dashboard.
+            You may need to use SSH port forwarding to forward this port to
+            your own computer.
         batch_name
             The HTCondor JobBatchName to assign to the worker jobs.
             This can be helpful for more sensible output for *condor_q*.
@@ -90,15 +117,31 @@ class CHTCCluster(HTCondorCluster):
         worker_image: Optional[str] = None,
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
-        scheduler_port: int = DEFAULT_SCHEDULER_PORT,
-        dashboard_port: int = DEFAULT_DASHBOARD_PORT,
+        scheduler_port: T_PORT_ARG = DEFAULT_SCHEDULER_PORT,
+        dashboard_port: T_PORT_ARG = DEFAULT_DASHBOARD_PORT,
         batch_name: Optional[str] = None,
     ) -> Dict[str, Any]:
+        """
+        This method implements the various special modifications we make to
+        adapt dask-jobqueue to run on CHTC resources.
+
+        See this class's __init__ method for details on the meanings of the
+        arguments, and the comments in this method for everything else.
+        """
         modified = kwargs.copy()
+
+        if isinstance(scheduler_port, int):
+            scheduler_port = {scheduler_port}
+        if isinstance(dashboard_port, int):
+            dashboard_port = {dashboard_port}
+
+        # TODO: there are race conditions in port selection.
+        chosen_scheduler_port = random_open_port(set(scheduler_port))
+        chosen_dashboard_port = random_open_port(set(dashboard_port) - {chosen_scheduler_port})
 
         # These get forwarded to the Dask scheduler.
         modified["scheduler_options"] = merge(
-            {"port": scheduler_port, "dashboard_address": str(dashboard_port)},
+            {"port": chosen_scheduler_port, "dashboard_address": str(chosen_dashboard_port)},
             # Capture anything the user passed in.
             kwargs.get(
                 "scheduler_options",
@@ -191,3 +234,39 @@ def seconds(**kwargs: int) -> int:
         represented by the ``kwargs``.
     """
     return math.ceil(datetime.timedelta(**kwargs).total_seconds())
+
+
+def random_open_port(ports: Iterable[int]) -> int:
+    """
+    Find a random available port among the given ports.
+    """
+    return random.sample(filter_ports(ports), k=1)[0]
+
+
+def filter_ports(
+    desired_ports: Iterable[int], bad_ports: Optional[Iterable[int]] = None
+) -> Set[int]:
+    """
+    Filter the desired ports down to the ones that are not "bad".
+
+    Parameters
+    ----------
+    desired_ports
+        The ports we would like to use.
+    bad_ports
+        The ports that we shouldn't use.
+        If not given, use :func:`used_ports`.
+
+    Returns
+    -------
+    good_ports : Set[int]
+        The ports from ``desired_ports`` that weren't in ``bad_ports``.
+    """
+    return set(desired_ports) - set(bad_ports or used_ports())
+
+
+def used_ports() -> Set[int]:
+    """
+    Return a set containing the ports that are currently in use.
+    """
+    return {connection.laddr.port for connection in psutil.net_connections()}
