@@ -433,7 +433,7 @@ class JupyterJobManager:
         sub = htcondor.Submit(
             {
                 "universe": "local",
-                "JobBatchName": " ".join(["jupyter"] + jupyter_args),
+                "JobBatchName": " ".join(("jupyter", *jupyter_args)),
                 "executable": sys.executable,
                 "arguments": arguments,
                 "initialdir": Path.cwd(),
