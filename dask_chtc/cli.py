@@ -507,8 +507,10 @@ class JupyterJobManager:
     def prep_log_files(self) -> None:
         JUPYTER_LOGS_DIR.mkdir(parents=True, exist_ok=True)
         for p in (self.out, self.err, self.event_log):
-            p.unlink(missing_ok=True)
-            p.touch()
+            # Path.unlink(missing_ok=True) wasn't added until Python 3.8
+            if p.exists():
+                p.unlink()
+                p.touch()
 
     def rotate_files(self) -> int:
         stamp = int(time.time())
