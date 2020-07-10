@@ -117,6 +117,8 @@ class CHTCCluster(HTCondorCluster):
             scheduler_port = {scheduler_port}
         if isinstance(dashboard_port, int):
             dashboard_port = {dashboard_port}
+
+        # TODO: there are race conditions in port selection.
         chosen_scheduler_port = random_open_port(set(scheduler_port))
         chosen_dashboard_port = random_open_port(set(dashboard_port) - {chosen_scheduler_port})
 
@@ -218,14 +220,36 @@ def seconds(**kwargs: int) -> int:
 
 
 def random_open_port(ports: Iterable[int]) -> int:
+    """
+    Find a random available port among the given ports.
+    """
     return random.sample(filter_ports(ports), k=1)[0]
 
 
 def filter_ports(
     desired_ports: Iterable[int], bad_ports: Optional[Iterable[int]] = None
 ) -> Set[int]:
+    """
+    Filter the desired ports down to the ones that are not "bad".
+
+    Parameters
+    ----------
+    desired_ports
+        The ports we would like to use.
+    bad_ports
+        The ports that we shouldn't use.
+        If not given, use :func:`used_ports`.
+
+    Returns
+    -------
+    good_ports : Set[int]
+        The ports from ``desired_ports`` that weren't in ``bad_ports``.
+    """
     return set(desired_ports) - set(bad_ports or used_ports())
 
 
 def used_ports() -> Set[int]:
+    """
+    Return a set containing the ports that are currently in use.
+    """
     return {connection.laddr.port for connection in psutil.net_connections()}
