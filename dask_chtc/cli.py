@@ -89,7 +89,7 @@ def path():
     default=False,
     help="Show the parsed Dask config instead of the contents of the configuration file.",
 )
-def show(parsed, diff):
+def show(parsed):
     """
     Show the contents of the configuration file.
 
@@ -136,7 +136,7 @@ def reset():
 @cli.group()
 def jupyter():
     """
-    Run a Jupyter notebooks server as an HTCondor job.
+    Run a Jupyter notebook server as an HTCondor job.
 
     Do not run Jupyter notebook servers on CHTC submit nodes except by
     using these commands!
@@ -218,7 +218,7 @@ def launch(jupyter_args):
 @jupyter.command()
 def stop():
     """
-    Stop your running Jupyter notebook server.
+    Stop a Jupyter notebook server that was started via "launch".
     """
     JupyterJobManager().connect().stop()
 
@@ -365,17 +365,15 @@ class EchoingEventHandler(events.FileSystemEventHandler):
             click.secho(line.rstrip(), fg=self.color, err=True)
 
 
-JUPYTER_LOGS_DIR = Path.home() / ".dask-chtc" / "jupyter-logs"
-
-
 class JupyterJobManager:
-    def __init__(self):
+    def __init__(self, logs_dir: Optional[Path] = None):
+        self.logs_dir = logs_dir or Path.home() / ".dask-chtc" / "jupyter-logs"
+
+        self.out = self.logs_dir / f"current.out"
+        self.err = self.logs_dir / f"current.err"
+        self.event_log = self.logs_dir / f"currents.events"
+
         self.cluster_id: Optional[int] = None
-
-        self.out = JUPYTER_LOGS_DIR / f"current.out"
-        self.err = JUPYTER_LOGS_DIR / f"current.err"
-        self.event_log = JUPYTER_LOGS_DIR / f"currents.events"
-
         self.events: Optional[htcondor.JobEventLog] = None
         self.observer: Optional[Observer] = None
 
@@ -467,7 +465,6 @@ class JupyterJobManager:
             text = str(event).rstrip()
             if event.type in (htcondor.JobEventType.JOB_HELD, htcondor.JobEventType.JOB_TERMINATED):
                 click.secho(text, err=True, fg="red")
-                break
             elif event.type is htcondor.JobEventType.JOB_ABORTED:
                 click.secho(text, err=True, fg="white")
                 break
@@ -506,7 +503,7 @@ class JupyterJobManager:
         logger.debug("Stopped echoing job log files")
 
     def prep_log_files(self) -> None:
-        JUPYTER_LOGS_DIR.mkdir(parents=True, exist_ok=True)
+        self.logs_dir.mkdir(parents=True, exist_ok=True)
         for p in (self.out, self.err, self.event_log):
             # Path.unlink(missing_ok=True) wasn't added until Python 3.8
             if p.exists():
@@ -516,9 +513,9 @@ class JupyterJobManager:
     def rotate_files(self) -> int:
         stamp = int(time.time())
 
-        self.out.rename(JUPYTER_LOGS_DIR / f"previous-{stamp}.out")
-        self.err.rename(JUPYTER_LOGS_DIR / f"previous-{stamp}.err")
-        self.event_log.rename(JUPYTER_LOGS_DIR / f"previous-{stamp}.events")
+        self.out.rename(self.logs_dir / f"previous-{stamp}.out")
+        self.err.rename(self.logs_dir / f"previous-{stamp}.err")
+        self.event_log.rename(self.logs_dir / f"previous-{stamp}.events")
 
         return stamp
 
