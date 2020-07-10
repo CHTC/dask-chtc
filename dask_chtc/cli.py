@@ -433,7 +433,7 @@ class JupyterJobManager:
         sub = htcondor.Submit(
             {
                 "universe": "local",
-                "JobBatchName": " ".join(jupyter_args),
+                "JobBatchName": " ".join(["jupyter"] + jupyter_args),
                 "executable": sys.executable,
                 "arguments": arguments,
                 "initialdir": Path.cwd(),
@@ -442,6 +442,7 @@ class JupyterJobManager:
                 "log": self.event_log.as_posix(),
                 "stream_output": "true",
                 "stream_error": "true",
+                "getenv": "true",
                 "transfer_executable": "false",
                 "transfer_output_files": '""',
                 "My.IsDaskCHTCJupyterNotebookServer": "true",
