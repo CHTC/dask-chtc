@@ -1,8 +1,9 @@
 # Dask at CHTC Demo
 
-![tests](https://github.com/JoshKarpel/dask-chtc/workflows/tests/badge.svg)
+[![Documentation Status](https://readthedocs.org/projects/dask-chtc/badge/?version=latest)](https://dask-chtc.readthedocs.io/en/latest/?badge=latest)
 ![GitHub issues](https://img.shields.io/github/issues/JoshKarpel/dask-chtc)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/JoshKarpel/dask-chtc)
+![tests](https://github.com/JoshKarpel/dask-chtc/workflows/tests/badge.svg)
 
 This repository holds the demo materials for my "Dask at CHTC" demo for the
 Morgridge Research Computing Virtual Brown Bag Lunch on 2020-06-25.

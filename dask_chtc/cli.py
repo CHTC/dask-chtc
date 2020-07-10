@@ -156,8 +156,11 @@ def jupyter():
     """
 
 
+JUPYTER_ARGS = click.argument("jupyter_args", nargs=-1, type=click.UNPROCESSED,)
+
+
 @jupyter.command(context_settings=dict(ignore_unknown_options=True))
-@click.argument("jupyter_args", nargs=-1, type=click.UNPROCESSED)
+@JUPYTER_ARGS
 def run(jupyter_args):
     """
     Run a Jupyter notebook server as an HTCondor job.
@@ -170,7 +173,7 @@ def run(jupyter_args):
     use the "launch" subcommand.
 
     Extra arguments will be forwarded to Jupyter.
-    For example, to start Jupyter Lab on some known port, you could run
+    For example, to start Jupyter Lab on some known port, you could run:
 
         dask-chtc jupyter run lab --port 3456
     """
@@ -182,7 +185,7 @@ def run(jupyter_args):
 
 
 @jupyter.command(context_settings=dict(ignore_unknown_options=True))
-@click.argument("jupyter_args", nargs=-1, type=click.UNPROCESSED)
+@JUPYTER_ARGS
 def launch(jupyter_args):
     """
     Launch a Jupyter notebook server as a persistent HTCondor job.
