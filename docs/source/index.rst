@@ -32,7 +32,10 @@ workers in the
 
 
 :doc:`installation`
-    How to install Dask-CHTC.
+    How to install Python and Dask-CHTC on a CHTC submit node.
+
+:doc:`jupyter`
+    How to use Dask-CHTC to run a Jupyter notebook server on a CHTC submit node.
 
 :doc:`api`
     API documentation for ``dask_chtc``.
@@ -59,6 +62,7 @@ workers in the
    :caption: Getting Started
 
    installation
+   jupyter
 
 .. toctree::
    :maxdepth: 2
