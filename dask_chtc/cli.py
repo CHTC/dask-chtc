@@ -370,6 +370,9 @@ class EchoingEventHandler(events.FileSystemEventHandler):
             click.secho(line.rstrip(), fg=self.color, err=True)
 
 
+MARKER = "IsDaskCHTCJupyterNotebookServer"
+
+
 class JupyterJobManager:
     def __init__(self, logs_dir: Optional[Path] = None):
         self.logs_dir = logs_dir or Path.home() / ".dask-chtc" / "jupyter-logs"
@@ -386,7 +389,7 @@ class JupyterJobManager:
     def discover(cls) -> Job:
         schedd = htcondor.Schedd()
 
-        query = schedd.query(constraint=f"Owner == {classad.quote(getpass.getuser())}",)
+        query = schedd.query(constraint=f"Owner == {classad.quote(getpass.getuser())} && {MARKER}",)
         if len(query) == 0:
             raise click.ClickException(
                 "Was not able to find a running Jupyter notebook server job!"
@@ -448,7 +451,7 @@ class JupyterJobManager:
                 "getenv": "true",
                 "transfer_executable": "false",
                 "transfer_output_files": '""',
-                "My.IsDaskCHTCJupyterNotebookServer": "true",
+                f"My.{MARKER}": "true",
             }
         )
 
