@@ -14,6 +14,14 @@ Dask-CHTC provides a way to run a Jupyter notebook server on a CHTC submit node.
     **Do not** run Jupyter notebook servers on CHTC submit nodes except through
     the process described on this page.
 
+.. attention::
+
+    You will need to learn how to
+    :ref:`forward ports over SSH <networking>`
+    to actually connect to the Jupyter notebook servers that you will learn
+    how to run here. We recommend skimming this page, then reading about
+    port forwarding, then coming back here to try out the commands in full.
+
 You can run a notebook server via the Dask-CHTC command line tool, via the
 ``jupyter`` subcommand.
 The command line tool will run the notebook server as an HTCondor job.
@@ -27,13 +35,13 @@ To see the detailed documentation for this subcommand, run
         [... long description cut ...]
 
         Commands:
-          launch  Launch a Jupyter notebook server as a persistent HTCondor job.
+          start   Start a Jupyter notebook server as a persistent HTCondor job.
           run     Run a Jupyter notebook server as an HTCondor job.
           status  Get information about your running Jupyter notebook server.
-          stop    Stop a Jupyter notebook server that was started via "launch".
+          stop    Stop a Jupyter notebook server that was started via "start".
 
 The four sub-sub-commands of ``dask-chtc jupyter``
-(``run``, ``launch``, ``status``, and ``stop``)
+(``run``, ``start``, ``status``, and ``stop``)
 let us run and interact with a Jupyter notebook server.
 You can run
 ``dask-chtc jupyter <subcommand> --help``
@@ -111,18 +119,18 @@ The next section will discuss how to run your notebook server in a more
 persistent manner.
 
 
-Using the ``launch``, ``status``, and ``stop`` subcommands
+Using the ``start``, ``status``, and ``stop`` subcommands
 ----------------------------------------------------------
 
-The ``launch`` subcommand is similar to the ``run`` subcommand, except that
+The ``start`` subcommand is similar to the ``run`` subcommand, except that
 if you end the command by Control-C or your terminal session ending,
-**the launched notebook server will not be stopped**.
+**the notebook server will not be stopped**.
 The command will still "take over" your terminal, echoing log messages just
 like the ``run`` subcommand did:
 
 .. code-block:: console
 
-    $ dask-chtc jupyter launch lab
+    $ dask-chtc jupyter start lab
     000 (7858021.000.000) 2020-07-13 10:52:51 Job submitted from host: <128.104.100.44:9618?addrs=128.104.100.44-9618+[2607-f388-107c-501-92e2-baff-fe2c-2724]-9618&alias=submit3.chtc.wisc.edu&noUDP&sock=schedd_4216_675f>
     001 (7858021.000.000) 2020-07-13 10:52:51 Job executing on host: <128.104.100.44:9618?addrs=128.104.100.44-9618+[2607-f388-107c-501-92e2-baff-fe2c-2724]-9618&alias=submit3.chtc.wisc.edu&noUDP&sock=starter_5948_a76b_2713469>
     [... Jupyter startup logs cut ...]
@@ -147,10 +155,10 @@ on both the Jupyter notebook server and the HTCondor job it is running inside:
     █ RUNNING  jupyter lab
     ├─ Contact Address: http://127.0.0.1:8888/?token=3342f18a95d7d61c51a2b8cf80b836e932ac53f9ebdb3965
     ├─ Python Executable: /home/karpel/.python/envs/dask-chtc/bin/python3.7
-    ├─ Launch Directory:  /home/karpel/dask-chtc
+    ├─ Working Directory:  /home/karpel/dask-chtc
     ├─ Job ID: 7858021.0
     ├─ Last status change at:  2020-07-13 15:52:51+00:00 UTC (4 minutes ago)
-    ├─ Originally launched at: 2020-07-13 15:52:51+00:00 UTC (4 minutes ago)
+    ├─ Originally started at: 2020-07-13 15:52:51+00:00 UTC (4 minutes ago)
     ├─ Output: /home/karpel/.dask-chtc/jupyter-logs/current.out
     ├─ Error:  /home/karpel/.dask-chtc/jupyter-logs/current.err
     └─ Events: /home/karpel/.dask-chtc/jupyter-logs/current.events

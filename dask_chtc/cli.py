@@ -148,11 +148,11 @@ def jupyter():
     The "run" subcommand runs the notebook server as if you had started it
     yourself. If your terminal session ends, the notebook server will also stop.
 
-    The "launch" subcommand runs the notebook server as a persistent HTCondor
+    The "started" subcommand runs the notebook server as a persistent HTCondor
     job: it will not be removed if your terminal session ends.
     The "status" subcommand can then be used to get information about your
     notebook server (like its contact address, to put into your web browser).
-    The "rm" subcommand can be used to stop your launched notebook server.
+    The "stop" subcommand can be used to stop your started notebook server.
     """
 
 
@@ -170,14 +170,14 @@ def run(jupyter_args):
     will end.
 
     To start a notebook server that is not connected to your terminal session,
-    use the "launch" subcommand.
+    use the "start" subcommand.
 
     Extra arguments will be forwarded to Jupyter.
     For example, to start Jupyter Lab on some known port, you could run:
 
         dask-chtc jupyter run lab --port 3456
     """
-    with JupyterJobManager().launch(jupyter_args) as manager:
+    with JupyterJobManager().start(jupyter_args) as manager:
         try:
             manager.watch_events()
         except KeyboardInterrupt:
@@ -186,9 +186,9 @@ def run(jupyter_args):
 
 @jupyter.command(context_settings=dict(ignore_unknown_options=True))
 @JUPYTER_ARGS
-def launch(jupyter_args):
+def start(jupyter_args):
     """
-    Launch a Jupyter notebook server as a persistent HTCondor job.
+    Start a Jupyter notebook server as a persistent HTCondor job.
 
     Just like the "run" subcommand, this will start a Jupyter notebook server
     and show you any output from it.
@@ -209,7 +209,7 @@ def launch(jupyter_args):
         dask-chtc jupyter run lab --port 3456
     """
 
-    manager = JupyterJobManager().launch(jupyter_args)
+    manager = JupyterJobManager().start(jupyter_args)
     manager.start_echoing()
     try:
         manager.watch_events()
@@ -220,7 +220,7 @@ def launch(jupyter_args):
 @jupyter.command()
 def stop():
     """
-    Stop a Jupyter notebook server that was started via "launch".
+    Stop a Jupyter notebook server that was started via "start".
     """
     JupyterJobManager().connect().stop()
 
@@ -236,7 +236,7 @@ def status(raw):
     """
     Get information about your running Jupyter notebook server.
 
-    If you have launched a Jupyter notebook server in the past and need to
+    If you have started a Jupyter notebook server in the past and need to
     find it's address again, use this command.
     """
     now = datetime.utcnow().replace(tzinfo=timezone.utc)
@@ -256,10 +256,10 @@ def status(raw):
             f"Hold Reason: {job.hold_reason}" if job.is_held else None,
             f"Contact Address: {manager.contact_address}",
             f"Python Executable: {job.executable}",
-            f"Launch Directory:  {job.iwd}",
+            f"Working Directory:  {job.iwd}",
             f"Job ID: {job.cluster_id}.{job.proc_id}",
             f"Last status change at:  {job.status_last_changed_at} UTC ({humanize.naturaldelta(now - job.status_last_changed_at)} ago)",
-            f"Originally launched at: {job.submitted_at} UTC ({humanize.naturaldelta(now - job.submitted_at)} ago)",
+            f"Originally started at: {job.submitted_at} UTC ({humanize.naturaldelta(now - job.submitted_at)} ago)",
             f"Output: {job.stdout}",
             f"Error:  {job.stderr}",
             f"Events: {job.log}",
@@ -424,7 +424,7 @@ class JupyterJobManager:
         # TODO: this choice is extremely arbitrary...
         return sorted(contact_addresses)[0]
 
-    def launch(self, jupyter_args: List[str]) -> "JupyterJobManager":
+    def start(self, jupyter_args: List[str]) -> "JupyterJobManager":
         if self.has_running_job():
             raise click.ClickException(
                 'You already have a running Jupyter notebook server; try the "status" subcommand to see it.'

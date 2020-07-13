@@ -1,16 +1,20 @@
-Dask-CHTC Documentation
-=======================
+Dask-CHTC
+=========
 
 .. py:currentmodule:: dask_chtc
 
 
 Dask-CHTC builds on top of
 `Dask-Jobqueue <https://jobqueue.dask.org/>`_
-to launch
+to spawn
 `Dask <https://distributed.dask.org/>`_
 workers in the
 `CHTC <http://chtc.cs.wisc.edu/>`_
 `HTCondor pool <https://research.cs.wisc.edu/htcondor/>`_.
+It also provides tools for
+:ref:`running Jupyter notebook servers in a controlled way on CHTC submit nodes <jupyter>`,
+which you may find helpful for providing an interactive
+development environment to use Dask in.
 
 
 .. note::
@@ -30,6 +34,14 @@ workers in the
     If you do not have an account on ``submit3.chtc.wisc.edu``, you will need to
     `request one <mailto:chtc@cs.wisc.edu>`_.
 
+.. attention::
+
+    Dask-CHTC is prototype software!
+    If you notice any issues or have any suggestions for improvements,
+    please write up a
+    `GitHub issue <https://github.com/JoshKarpel/dask-chtc/issues>`_
+    detailing the problem or proposal.
+
 
 :doc:`installation`
     How to install Python and Dask-CHTC on a CHTC submit node.
@@ -37,7 +49,7 @@ workers in the
 :doc:`jupyter`
     How to use Dask-CHTC to run a Jupyter notebook server on a CHTC submit node.
 
-:doc:`ports`
+:doc:`networking`
     Information on CHTC networking and
     how to forward ports over SSH,
     which will allow you to connect to
@@ -63,7 +75,7 @@ workers in the
 
    installation
    jupyter
-   ports
+   networking
 
 .. toctree::
    :maxdepth: 2

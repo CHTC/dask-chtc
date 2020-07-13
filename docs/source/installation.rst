@@ -95,7 +95,7 @@ Many more packages, and more up-to-date versions of packages,
 are often available in the community-created
 `conda-forge channel <https://conda-forge.org/>`_
 channel.
-For example, to install Dask from ``conda-forge` instead of the default channel,
+For example, to install Dask from ``conda-forge`` instead of the default channel,
 you would run
 
 .. code-block:: console

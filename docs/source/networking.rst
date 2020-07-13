@@ -103,6 +103,7 @@ Press enter again to return to your normal terminal prompt.
 The port is now forwarded, as if you had added the ``-L`` argument to your
 original ``ssh`` command.
 
+.. _dashboard-port-forwarding:
 
 Forwarding a Port for the Dask Dashboard
 ----------------------------------------
