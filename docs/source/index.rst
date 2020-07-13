@@ -42,6 +42,7 @@ development environment to use Dask in.
     `GitHub issue <https://github.com/JoshKarpel/dask-chtc/issues>`_
     detailing the problem or proposal.
 
+These pages will walk you through various aspects of using Dask-CHTC:
 
 :doc:`installation`
     How to install Python and Dask-CHTC on a CHTC submit node.
@@ -59,6 +60,13 @@ development environment to use Dask in.
     A brief example Jupyter notebook,
     showing how to start up a :class:`CHTCCluster`
     and use it to perform some calculations.
+
+:doc:`docker`
+    Information on how to build Docker images for use with Dask-CHTC.
+
+Detailed information on the Python API
+and the associated command line tool
+can be found on these pages:
 
 :doc:`api`
     API documentation for ``dask_chtc``.
@@ -82,6 +90,7 @@ development environment to use Dask in.
    jupyter
    networking
    example
+   docker
 
 .. toctree::
    :maxdepth: 2
