@@ -32,7 +32,7 @@ T_PORT_ARG = Union[int, Iterable[int]]
 
 class CHTCCluster(HTCondorCluster):
     """
-    A customized :class:`dask_jobqueue.HTCondorCluster` for
+    A customized :class:`dask_jobqueue.HTCondorCluster` subclass for
     spawning Dask workers
     in the CHTC HTCondor pool.
 
@@ -69,7 +69,7 @@ class CHTCCluster(HTCondorCluster):
             Defaults to ``False``.
         gpus
             The number of GPUs to request.
-            Defaults to 0 unless ``gpu_lab = True``,
+            Defaults to ``0`` unless ``gpu_lab = True``,
             in which case the default is ``1``.
         scheduler_port
             The port (or range of ports) to use for the Dask scheduler
@@ -83,7 +83,9 @@ class CHTCCluster(HTCondorCluster):
             We do not recommend changing the default!
         dashboard_port
             The port (or range of ports) to use for the Dask scheduler's dashboard.
-            You may need to use SSH port forwarding to forward this port to
+            You will need to use
+            :ref:`SSH port forwarding <dashboard-port-forwarding>`
+            to forward this port to
             your own computer.
         batch_name
             The HTCondor JobBatchName to assign to the worker jobs.
