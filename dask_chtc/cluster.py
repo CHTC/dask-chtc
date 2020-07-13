@@ -19,8 +19,7 @@ PACKAGE_DIR = Path(__file__).parent
 ENTRYPOINT_SCRIPT_PATH = (PACKAGE_DIR / "entrypoint.sh").absolute()
 
 PORT_INSIDE_CONTAINER = 8787
-DEFAULT_SCHEDULER_PORT = range(3100, 3500)
-DEFAULT_DASHBOARD_PORT = range(3500, 3900)
+SCHEDULER_PORTS = set(range(3000, 4000))
 
 
 class CHTCJob(HTCondorJob):
@@ -50,8 +49,6 @@ class CHTCCluster(HTCondorCluster):
         worker_image: Optional[str] = None,
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
-        scheduler_port: T_PORT_ARG = DEFAULT_SCHEDULER_PORT,
-        dashboard_port: T_PORT_ARG = DEFAULT_DASHBOARD_PORT,
         batch_name: Optional[str] = None,
         python: str = "./entrypoint.sh python3",
         **kwargs: Any,
@@ -71,22 +68,6 @@ class CHTCCluster(HTCondorCluster):
             The number of GPUs to request.
             Defaults to ``0`` unless ``gpu_lab = True``,
             in which case the default is ``1``.
-        scheduler_port
-            The port (or range of ports) to use for the Dask scheduler
-            to communicate with the workers.
-            If you want to customize this, keep in mind that
-            only certain ports are usable due to CHTC's infrastructure
-            (the default is a reasonable range)
-            and that you must provide a large enough range to find an unused
-            port, or the scheduler will not be able to start up.
-            You do not need to forward the scheduler port via SSH.
-            We do not recommend changing the default!
-        dashboard_port
-            The port (or range of ports) to use for the Dask scheduler's dashboard.
-            You will need to use
-            :ref:`SSH port forwarding <dashboard-port-forwarding>`
-            to forward this port to
-            your own computer.
         batch_name
             The HTCondor JobBatchName to assign to the worker jobs.
             This can be helpful for more sensible output for *condor_q*.
@@ -100,13 +81,7 @@ class CHTCCluster(HTCondorCluster):
             are passed to :class:`dask_jobqueue.HTCondorCluster`.
         """
         kwargs = self._modify_kwargs(
-            kwargs,
-            worker_image=worker_image,
-            gpu_lab=gpu_lab,
-            gpus=gpus,
-            scheduler_port=scheduler_port,
-            dashboard_port=dashboard_port,
-            batch_name=batch_name,
+            kwargs, worker_image=worker_image, gpu_lab=gpu_lab, gpus=gpus, batch_name=batch_name,
         )
 
         super().__init__(python=python, **kwargs)
@@ -119,8 +94,6 @@ class CHTCCluster(HTCondorCluster):
         worker_image: Optional[str] = None,
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
-        scheduler_port: T_PORT_ARG = DEFAULT_SCHEDULER_PORT,
-        dashboard_port: T_PORT_ARG = DEFAULT_DASHBOARD_PORT,
         batch_name: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
@@ -132,18 +105,10 @@ class CHTCCluster(HTCondorCluster):
         """
         modified = kwargs.copy()
 
-        if isinstance(scheduler_port, int):
-            scheduler_port = {scheduler_port}
-        if isinstance(dashboard_port, int):
-            dashboard_port = {dashboard_port}
-
         # TODO: there are race conditions in port selection.
-        chosen_scheduler_port = random_open_port(set(scheduler_port))
-        chosen_dashboard_port = random_open_port(set(dashboard_port) - {chosen_scheduler_port})
-
         # These get forwarded to the Dask scheduler.
         modified["scheduler_options"] = merge(
-            {"port": chosen_scheduler_port, "dashboard_address": str(chosen_dashboard_port)},
+            {"port": random_open_port(SCHEDULER_PORTS)},
             # Capture anything the user passed in.
             kwargs.get(
                 "scheduler_options",
