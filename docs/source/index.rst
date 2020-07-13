@@ -55,6 +55,11 @@ development environment to use Dask in.
     which will allow you to connect to
     Jupyter notebooks and Dask dashboards running on CHTC submit nodes.
 
+:doc:`example`
+    A brief example Jupyter notebook,
+    showing how to start up a :class:`CHTCCluster`
+    and use it to perform some calculations.
+
 :doc:`api`
     API documentation for ``dask_chtc``.
 
@@ -76,6 +81,7 @@ development environment to use Dask in.
    installation
    jupyter
    networking
+   example
 
 .. toctree::
    :maxdepth: 2
