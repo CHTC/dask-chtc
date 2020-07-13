@@ -31,7 +31,7 @@ CONTEXT_SETTINGS = dict(help_option_names=["-h", "--help"])
     "--verbose", "-v", is_flag=True, default=False, help="Show log messages as the CLI runs.",
 )
 @click.version_option(
-    version=__version__, prog_name="HTMap", message="%(prog)s version %(version)s",
+    version=__version__, prog_name="Dask-CHTC", message="%(prog)s version %(version)s",
 )
 def cli(verbose):
     """

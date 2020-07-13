@@ -23,6 +23,16 @@ workers in the
     `chtc@cs.wisc.edu <mailto:chtc@cs.wisc.edu>`_ and let them know you're interested
     in using Dask.
 
+.. attention::
+
+    We currently only support the Dask-CHTC workflow on the
+    ``submit3.chtc.wisc.edu`` submit node.
+    If you do not have an account on ``submit3.chtc.wisc.edu``, you will need to
+    `request one <mailto:chtc@cs.wisc.edu>`_.
+
+
+:doc:`installation`
+    How to install Dask-CHTC.
 
 :doc:`api`
     API documentation for ``dask_chtc``.
@@ -42,6 +52,19 @@ workers in the
    :hidden:
 
    self
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Getting Started
+
+   installation
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Reference
+
    api
    cli
    ports
