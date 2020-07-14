@@ -12,8 +12,10 @@ to spawn
 workers in the
 [CHTC](http://chtc.cs.wisc.edu/)
 [HTCondor pool](https://research.cs.wisc.edu/htcondor/).
+Full documentation is available
+[here](https://dask-chtc.readthedocs.io).
 
-It also provides tools for
+Dask-CHTC also provides tools for
 running Jupyter notebook servers in a controlled way on CHTC submit nodes,
 which you may find helpful for providing an interactive
 development environment to use Dask in.
