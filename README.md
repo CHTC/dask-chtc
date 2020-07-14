@@ -1,19 +1,35 @@
-# Dask at CHTC Demo
+# Dask-CHTC
 
 [![Documentation Status](https://readthedocs.org/projects/dask-chtc/badge/?version=latest)](https://dask-chtc.readthedocs.io/en/latest/?badge=latest)
 ![GitHub issues](https://img.shields.io/github/issues/JoshKarpel/dask-chtc)
 ![GitHub pull requests](https://img.shields.io/github/issues-pr/JoshKarpel/dask-chtc)
 ![tests](https://github.com/JoshKarpel/dask-chtc/workflows/tests/badge.svg)
 
-This repository holds the demo materials for my "Dask at CHTC" demo for the
-Morgridge Research Computing Virtual Brown Bag Lunch on 2020-06-25.
-It's a "vision of a possible future" of what using Dask on the CHTC pool
-might look like.
+Dask-CHTC builds on top of
+[Dask-Jobqueue](https://jobqueue.dask.org/)
+to spawn
+[Dask](https://distributed.dask.org/)
+workers in the
+[CHTC](http://chtc.cs.wisc.edu/)
+[HTCondor pool](https://research.cs.wisc.edu/htcondor/).
 
-This is very much a prototype, and you shouldn't try it at home:
-there's a lot
-of hacking going on in the cluster infrastructure to make it work,
-which we'd like to clean up.
+It also provides tools for
+running Jupyter notebook servers in a controlled way on CHTC submit nodes,
+which you may find helpful for providing an interactive
+development environment to use Dask in.
 
-The accompanying introductory slides are
-[here](https://docs.google.com/presentation/d/10WEBgkoZTeF1LcloB9_Ka5T6J_sPilRwqdYrMZHXtNo/edit?usp=sharing).
+If you're interested in using Dask at CHTC but have never used CHTC resources
+before, please
+[fill out the CHTC contact form](http://chtc.cs.wisc.edu/form>)
+to get in touch with our Research Computing Facilitators.
+If you've already had an engagement meeting, send an email to
+[chtc@cs.wisc.edu](mailto:chtc@cs.wisc.edu) and let them know you're interested
+in using Dask.
+
+Dask-CHTC is prototype software!
+If you notice any issues or have any suggestions for improvements,
+please write up a
+[GitHub issue](https://github.com/JoshKarpel/dask-chtc/issues)
+detailing the problem or proposal.
+We also recommend "watching" the GitHub repository to keep track of
+new releases and upgrading promptly when they occur.

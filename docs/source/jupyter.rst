@@ -181,3 +181,12 @@ To stop your notebook server, run
         0  -  Run Bytes Received By Job
     009 (7858021.000.000) 2020-07-13 11:02:58 Job was aborted.
         Shut down Jupyter notebook server (by user karpel)
+
+
+What's Next?
+------------
+
+Once you're able to
+:ref:`connect to your Jupyter notebook server <networking>`,
+you should move on to :doc:`example` to learn how to create a
+:class:`CHTCCluster`.

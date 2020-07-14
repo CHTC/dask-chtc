@@ -6,4 +6,4 @@ API Reference
 =============
 
 .. autoclass:: CHTCCluster
-   :show-inheritance:
+   :members: scale, adapt

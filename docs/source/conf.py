@@ -25,7 +25,6 @@ author = "Josh Karpel"
 # The full version, including alpha/beta/rc tags
 release = dask_chtc.__version__
 
-
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
@@ -75,8 +74,21 @@ autoclass_content = "both"
 
 intersphinx_mapping = {
     "https://docs.python.org/3/": None,
-    "https://htcondor.readthedocs.io/en/latest/": None,
-    "https://docs.dask.org/en/latest/": None,
-    "https://distributed.dask.org/en/latest/": None,
-    "https://jobqueue.dask.org/en/latest/": None,
+    "htcondor": (
+        "https://htcondor.readthedocs.io/en/latest/",
+        "https://htcondor.readthedocs.io/en/latest/objects.inv",
+    ),
+    "classad": (
+        "https://htcondor.readthedocs.io/en/latest/",
+        "https://htcondor.readthedocs.io/en/latest/objects.inv",
+    ),
+    "dask": ("https://docs.dask.org/en/latest/", "https://docs.dask.org/en/latest/objects.inv",),
+    "dask.distributed": (
+        "https://distributed.dask.org/en/latest/",
+        "https://distributed.dask.org/en/latest/objects.inv",
+    ),
+    "dask_jobqueue": (
+        "https://jobqueue.dask.org/en/latest/",
+        "https://jobqueue.dask.org/en/latest/objects.inv",
+    ),
 }

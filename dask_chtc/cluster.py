@@ -60,6 +60,8 @@ class CHTCCluster(HTCondorCluster):
             The Docker image to run the Dask workers inside.
             Defaults to ``daskdev/dask:latest``
             (`Dockerfile <https://hub.docker.com/r/daskdev/dask/dockerfile>`_).
+            See :ref:`this page <docker>`
+            for advice on building Docker images for use with Dask-CHTC.
         gpu_lab
             If ``True``, workers will be allowed to run on GPULab nodes.
             If this is ``True``, the default value of ``gpus`` becomes ``1``.

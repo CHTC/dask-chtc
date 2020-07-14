@@ -138,3 +138,14 @@ To check that installation worked correctly, try running
 If you don't see the version message or some error occurs, try re-installing.
 If that fails, please
 `let us know <https://github.com/JoshKarpel/dask-chtc/issues>`_.
+
+What's Next?
+------------
+
+If you like working inside a Jupyter environment, you should read the next
+two pages: :ref:`jupyter` and :ref:`networking`.
+
+If you are going to run Dask non-interactively (i.e., through a normal Python
+script, not a notebook), then you're almost ready to go.
+Pull the :class:`CHTCCluster` and Dask client creation code from :doc:`example`
+and start computing!

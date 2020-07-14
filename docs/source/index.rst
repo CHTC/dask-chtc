@@ -41,8 +41,11 @@ development environment to use Dask in.
     please write up a
     `GitHub issue <https://github.com/JoshKarpel/dask-chtc/issues>`_
     detailing the problem or proposal.
+    We also recommend "watching" the
+    `GitHub repository <https://github.com/JoshKarpel/dask-chtc>`_
+    to keep track of new releases, and upgrading promptly when they occur.
 
-These pages will walk you through various aspects of using Dask-CHTC:
+These pages will walk you through the various aspects of using Dask-CHTC:
 
 :doc:`installation`
     How to install Python and Dask-CHTC on a CHTC submit node.

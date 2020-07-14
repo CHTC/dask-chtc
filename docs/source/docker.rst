@@ -10,25 +10,53 @@ Docker images.
 This guide won't cover how to build Docker images; innumerable tutorials are
 available on the
 `CHTC website <http://chtc.cs.wisc.edu/guides.shtml>`_
-and the wider internet.
-Our focus will be on the specific requirements for Dask-CHTC, with example
-``Dockerfile``.
+and the wider internet,
+and the actual
+`Docker docs <https://docs.docker.com/engine/reference/builder/>`_
+are usually useful.
+Our focus will be on the specific requirements for images for use with Dask-CHTC.
 
-The first main requirement, perhaps unsurprisingly, is that ``dask`` needs to be
-installed in your image so that it can run a Dask worker.
-Secondarily, you'll also want to make sure various associated libraries
-like ``lz4`` are installed.
-You'll get warnings when the workers start for missing libraries
-or version mismatches in these associated libraries; we recommend making sure
-they are all resolved.
+The main requirements are:
 
-The other main requirement is that any library you use in your application
-must also be available on the workers.
-For example, if you ``import foobar`` in your code, the ``foobar`` package
-must be available for import for the client as well as all of the workers.
-(You can be a little more minimal than this, but it's not worth it
--- just make sure everything is installed.)
+#. ``dask`` needs to be installed in your image so that it can run a Dask worker.
+   You'll also want to make sure various associated libraries
+   like ``lz4`` and ``blosc`` (named ``python-blosc`` in ``conda``) are
+   installed.
+   You'll get warnings when the workers start for missing libraries
+   or version mismatches in these associated libraries;
+   we recommend making sure they are all resolved.
 
+#. Any library you use in your application must also be available on the workers.
+   For example, if you ``import foobar`` in your code, the ``foobar`` package
+   must be available for import for the client as well as all of the workers.
+   (You can be a little more minimal than this, but it's not worth it
+   -- just make sure everything is installed.)
+
+#. Any image you use **must** have a ``tini`` entrypoint (see
+   `their README <https://github.com/krallin/tini#tini---a-tiny-but-valid-init-for-containers>`_
+   for details on what ``tini`` does).
+   This ensures that the HTCondor job that your Dask worker is running in
+   is able to shut down cleanly when the Dask client orders it to stop.
+   If you don't do this, you may notice "zombie" workers that remain alive
+   even after being told to stop, either by the Dask cluster itself or by
+   "brute force" stopping them with ``condor_rm``.
+
+A few other considerations to keep in mind:
+
+* Images must be
+  `pushed to Docker Hub <https://docs.docker.com/engine/reference/commandline/push/>`_
+  for HTCondor to use them.
+  If you push your image to ``yourname/repository:tag``, then you should set
+  ``worker_image = "yourname/repository:tag"`` in your :class:`CHTCCluster`.
+* Always use an explicit tag; do not rely on ``latest``.
+  HTCondor caches Docker images by tag, not by SHA, so if you change your image
+  without changing its tag, you may get an older version of your image if your
+  worker lands on an HTCondor slot that you have used in the recent past.
+* Minimize the size of your Docker images.
+  Although workers with small resource requests will likely find a slot in
+  under a minute, it may take several minutes to download a large Docker image.
+  Most useful base images are already a few GB, so try to keep the final image
+  size under 5 GB.
 
 Images for CPU Workers
 ----------------------
@@ -55,6 +83,19 @@ top of ``daskdev/dask``:
      && conda clean --yes --all \
      && :
 
+.. note::
+
+    The trick used in the long ``RUN`` statement:
+
+    .. code-block:: dockerfile
+
+        RUN : \
+         && ... \
+         && :
+
+    is to help keep your diffs clean.
+    ``:`` is a no-op command in ``bash``.
+    Try it out!
 
 Images for GPU Workers
 ----------------------
@@ -73,7 +114,11 @@ For example, the
 `PyTorch Docker images <https://hub.docker.com/r/pytorch/pytorch/>`_
 inherit from the NVIDIA images, so you could use them as your base image.
 
-Here's an example ``Dockerfile`` that builds off the PyTorch image:
+Here's an example ``Dockerfile`` that builds off the PyTorch image
+by installing
+`Dask-ML <https://ml.dask.org/>`_
+and
+`Skorch <https://skorch.readthedocs.io/en/latest/?badge=latest>`_:
 
 .. code-block:: dockerfile
 

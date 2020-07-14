@@ -137,3 +137,11 @@ Please
 `let us know <https://github.com/JoshKarpel/dask-chtc/issues>`_
 if you run into any issues you believe are caused by
 internal networking failures.
+
+
+What's Next?
+------------
+
+Now that you can connect to your Jupyter notebook server,
+you should move on to :doc:`example` to learn how to create a
+:class:`CHTCCluster`.
