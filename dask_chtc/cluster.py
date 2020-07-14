@@ -148,6 +148,9 @@ class CHTCCluster(HTCondorCluster):
             {"request_gpus": str(gpus) if gpus is not None else "1"}
             if gpus is not None or gpu_lab
             else None,
+            # CHTC normally holds jobs after three days; vacate them instead.
+            # There's no actual checkpointing: the worker job will just restart.
+            {"My.is_resumable": "true"},
             # Workers can only run on certain execute nodes.
             {"requirements": "(Target.HasCHTCStaging)"},
             # Support attributes to gather usage data.
