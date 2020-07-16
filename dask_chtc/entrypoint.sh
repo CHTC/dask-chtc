@@ -33,5 +33,13 @@ echo "HOST is $HOST"
 echo "PORT is $PORT"
 echo
 
-# Add the contact address we calculated above the worker arguments.
-exec "$@" --contact-address tcp://"$HOST":"$PORT"
+# Paths to TLS config files, transferred to the worker by HTCondor file transfer.
+FILE_CA="$_CONDOR_SCRATCH_DIR/ca.pem"
+FILE_CERT="$_CONDOR_SCRATCH_DIR/cert.pem"
+FILE_KEY="$_CONDOR_SCRATCH_DIR/cert.pem"
+
+# Add the contact address we calculated above to the worker arguments,
+# as well as TLS configuration.
+exec "$@" \
+  --contact-address tls://"$HOST":"$PORT" \
+  --tls-ca-file "$FILE_CA" --tls-cert "$FILE_CERT" --tls-key "$FILE_KEY"
