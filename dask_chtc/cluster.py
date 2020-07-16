@@ -31,7 +31,7 @@ class CHTCJob(HTCondorJob):
     def __init__(self, *args, **kwargs):
         # Suppress automatic addition of TLS config options to the worker args
         # (so that we can add our own in entrypoint.sh).
-        kwargs["security"].pop()
+        kwargs.pop("security")
 
         super().__init__(*args, **kwargs)
 
