@@ -12,7 +12,7 @@ from dask_jobqueue import HTCondorCluster
 from dask_jobqueue.htcondor import HTCondorJob
 from distributed.security import Security
 
-from .security import CA_FILE, CERT_FILE
+from .security import CA_FILE, CERT_FILE, ensure_certs
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -92,6 +92,7 @@ class CHTCCluster(HTCondorCluster):
             like ``cores`` or ``memory``,
             are passed to :class:`dask_jobqueue.HTCondorCluster`.
         """
+
         kwargs = self._modify_kwargs(
             kwargs, worker_image=worker_image, gpu_lab=gpu_lab, gpus=gpus, batch_name=batch_name,
         )
@@ -120,6 +121,7 @@ class CHTCCluster(HTCondorCluster):
         # Security settings.
         # Worker security configuration is done in entrypoint.sh;
         # this mainly effects the client and scheduler.
+        ensure_certs()
         modified["protocol"] = "tls://"
         ca_file = str(CA_FILE)
         cert_file = str(CERT_FILE)
