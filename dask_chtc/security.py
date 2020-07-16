@@ -27,7 +27,8 @@ BASE_NAME_ATTRIBUTES = [
 ]
 
 
-def generate_private_key() -> rsa.RSAPrivateKeyWithSerialization:
+def generate_key() -> rsa.RSAPrivateKeyWithSerialization:
+    """Generate an RSA private key."""
     return rsa.generate_private_key(public_exponent=65537, key_size=2048, backend=BACKEND)
 
 
@@ -46,7 +47,7 @@ def generate_ca() -> CertAndKey:
     """
     now = datetime.utcnow()
 
-    key = generate_private_key()
+    key = generate_key()
 
     subject = issuer = x509.Name(
         [*BASE_NAME_ATTRIBUTES, x509.NameAttribute(x509.NameOID.COMMON_NAME, "Dask-CHTC CA")]
@@ -83,7 +84,7 @@ def generate_cert(ca_and_key: CertAndKey) -> CertAndKey:
     """
     now = datetime.utcnow()
 
-    key = generate_private_key()
+    key = generate_key()
 
     name = x509.Name(
         [*BASE_NAME_ATTRIBUTES, x509.NameAttribute(x509.NameOID.COMMON_NAME, "Dask-CHTC")]
@@ -158,7 +159,12 @@ def save_cert(path: Path, cert_and_key=CertAndKey) -> Path:
 
 def delete_certs():
     """Remove **all** certificates managed by Dask-CHTC."""
-    shutil.rmtree(CERT_DIR, ignore_errors=True)
+    if not CERT_DIR.exists():
+        return
+
+    logger.debug("Deleting all existing Dask-CHTC certificates...")
+    shutil.rmtree(CERT_DIR)
+    logger.debug("Deleted all existing Dask-CHTC certificates.")
 
 
 def ensure_certs():

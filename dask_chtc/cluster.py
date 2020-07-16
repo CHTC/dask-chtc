@@ -12,11 +12,10 @@ from dask_jobqueue import HTCondorCluster
 from dask_jobqueue.htcondor import HTCondorJob
 from distributed.security import Security
 
-from .security import CA_FILE, CERT_FILE, ensure_certs
+from . import security
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
-
 
 PACKAGE_DIR = Path(__file__).parent
 ENTRYPOINT_SCRIPT_PATH = (PACKAGE_DIR / "entrypoint.sh").absolute()
@@ -121,10 +120,10 @@ class CHTCCluster(HTCondorCluster):
         # Security settings.
         # Worker security configuration is done in entrypoint.sh;
         # this mainly effects the client and scheduler.
-        ensure_certs()
+        security.ensure_certs()
         modified["protocol"] = "tls://"
-        ca_file = str(CA_FILE)
-        cert_file = str(CERT_FILE)
+        ca_file = str(security.CA_FILE)
+        cert_file = str(security.CERT_FILE)
         modified["security"] = Security(
             tls_ca_file=ca_file,
             tls_worker_cert=cert_file,
@@ -148,10 +147,11 @@ class CHTCCluster(HTCondorCluster):
         )
 
         # TODO: do we allow arbitrary input file transfer?
-        input_files = [ENTRYPOINT_SCRIPT_PATH, CA_FILE, CERT_FILE]
-        encrypted_input_files = [CA_FILE, CERT_FILE]
-        tif = ", ".join(Path(path).absolute().as_posix() for path in input_files)
+        encrypted_input_files = [security.CA_FILE, security.CERT_FILE]
         eif = ", ".join(Path(path).absolute().as_posix() for path in encrypted_input_files)
+
+        input_files = [ENTRYPOINT_SCRIPT_PATH, *encrypted_input_files]
+        tif = ", ".join(Path(path).absolute().as_posix() for path in input_files)
 
         # These get put in the HTCondor job submit description.
         gpus = gpus or dask.config.get(f"jobqueue.{cls.config_name}.gpus")
@@ -170,7 +170,7 @@ class CHTCCluster(HTCondorCluster):
             {"container_service_names": "dask", "dask_container_port": PORT_INSIDE_CONTAINER},
             # Transfer our internals and whatever else the user requested.
             {"transfer_input_files": tif, "encrypt_input_files": eif},
-            # TODO: encrypt_execute_directory ?
+            # TODO: turn on encrypt_execute_directory ?
             # Do not transfer any output files, ever.
             {"transfer_output_files": '""'},
             # GPULab and general GPU setup.
