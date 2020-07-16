@@ -4,12 +4,15 @@ import logging
 import math
 import random
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Mapping, Optional, Set, Union
+from typing import Any, Dict, Iterable, Mapping, Optional, Set, Union
 
 import dask
 import psutil
 from dask_jobqueue import HTCondorCluster
 from dask_jobqueue.htcondor import HTCondorJob
+from distributed.security import Security
+
+from .security import CA_FILE, CERT_FILE
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.DEBUG)
@@ -24,6 +27,13 @@ SCHEDULER_PORTS = set(range(3000, 4000))
 
 class CHTCJob(HTCondorJob):
     config_name = "chtc"
+
+    def __init__(self, *args, **kwargs):
+        # Suppress automatic addition of TLS config options to the worker args
+        # (so that we can add our own in entrypoint.sh).
+        kwargs["security"].pop()
+
+        super().__init__(*args, **kwargs)
 
 
 T_PORT_ARG = Union[int, Iterable[int]]
@@ -77,6 +87,9 @@ class CHTCCluster(HTCondorCluster):
         python
             The command to execute to start Python inside the worker job.
             Only modify this if you know what you're doing!
+        protocol
+            The security protocol to use.
+            Do not change this!
         kwargs
             Additional keyword arguments,
             like ``cores`` or ``memory``,
@@ -107,6 +120,21 @@ class CHTCCluster(HTCondorCluster):
         """
         modified = kwargs.copy()
 
+        # Security settings.
+        # Worker security configuration is done in entrypoint.sh;
+        # this mainly effects the client and scheduler.
+        kwargs["protocol"] = "tls://"
+        kwargs["security"] = Security(
+            tls_ca_file=CA_FILE,
+            tls_worker_cert=CERT_FILE,
+            tls_worker_key=CERT_FILE,
+            tls_client_cert=CERT_FILE,
+            tls_client_key=CERT_FILE,
+            tls_scheduler_cert=CERT_FILE,
+            tls_scheduler_key=CERT_FILE,
+            require_encryption=True,
+        )
+
         # TODO: there are race conditions in port selection.
         # These get forwarded to the Dask scheduler.
         modified["scheduler_options"] = merge(
@@ -119,8 +147,10 @@ class CHTCCluster(HTCondorCluster):
         )
 
         # TODO: do we allow arbitrary input file transfer?
-        input_files = [ENTRYPOINT_SCRIPT_PATH]
+        input_files = [ENTRYPOINT_SCRIPT_PATH, CA_FILE, CERT_FILE]
+        encrypted_input_files = [CA_FILE, CERT_FILE]
         tif = ", ".join(Path(path).absolute().as_posix() for path in input_files)
+        eif = ", ".join(Path(path).absolute().as_posix() for path in encrypted_input_files)
 
         # These get put in the HTCondor job submit description.
         gpus = gpus or dask.config.get(f"jobqueue.{cls.config_name}.gpus")
@@ -138,7 +168,8 @@ class CHTCCluster(HTCondorCluster):
             # See --listen-address below for telling Dask to actually listen to this port.
             {"container_service_names": "dask", "dask_container_port": PORT_INSIDE_CONTAINER},
             # Transfer our internals and whatever else the user requested.
-            {"transfer_input_files": tif},
+            {"transfer_input_files": tif, "encrypt_input_files": eif},
+            # TODO: encrypt_execute_directory ?
             # Do not transfer any output files, ever.
             {"transfer_output_files": '""'},
             # GPULab and general GPU setup.
