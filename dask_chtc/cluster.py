@@ -87,9 +87,6 @@ class CHTCCluster(HTCondorCluster):
         python
             The command to execute to start Python inside the worker job.
             Only modify this if you know what you're doing!
-        protocol
-            The security protocol to use.
-            Do not change this!
         kwargs
             Additional keyword arguments,
             like ``cores`` or ``memory``,
@@ -123,15 +120,17 @@ class CHTCCluster(HTCondorCluster):
         # Security settings.
         # Worker security configuration is done in entrypoint.sh;
         # this mainly effects the client and scheduler.
-        kwargs["protocol"] = "tls://"
-        kwargs["security"] = Security(
-            tls_ca_file=CA_FILE,
-            tls_worker_cert=CERT_FILE,
-            tls_worker_key=CERT_FILE,
-            tls_client_cert=CERT_FILE,
-            tls_client_key=CERT_FILE,
-            tls_scheduler_cert=CERT_FILE,
-            tls_scheduler_key=CERT_FILE,
+        modified["protocol"] = "tls://"
+        ca_file = str(CA_FILE)
+        cert_file = str(CERT_FILE)
+        modified["security"] = Security(
+            tls_ca_file=ca_file,
+            tls_worker_cert=cert_file,
+            tls_worker_key=cert_file,
+            tls_client_cert=cert_file,
+            tls_client_key=cert_file,
+            tls_scheduler_cert=cert_file,
+            tls_scheduler_key=cert_file,
             require_encryption=True,
         )
 
