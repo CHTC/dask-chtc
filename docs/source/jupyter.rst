@@ -55,24 +55,10 @@ The ``run`` subcommand is the simplest way to launch a Jupyter notebook server.
 It is designed to mimic the behavior of running a Jupyter notebook server on
 your local machine. Any command line arguments you pass to it will be
 passed to the actual ``jupyter`` command line tool.
-For example, if you normally start up a Jupyter Lab instance by running
 
-.. code-block:: console
-
-    $ jupyter lab
-    [... Jupyter startup logs cut ...]
-    [I 10:31:41.908 LabApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-    [W 10:31:41.966 LabApp] No web browser found: could not locate runnable browser.
-    [C 10:31:41.967 LabApp]
-
-        To access the notebook, open this file in a browser:
-            file:///home/karpel/.local/share/jupyter/runtime/nbserver-2176065-open.html
-        Or copy and paste one of these URLs:
-            http://localhost:8888/?token=9af0f23248bc26014727d1dc85b5fcc07f4803caf777f87a
-         or http://127.0.0.1:8888/?token=9af0f23248bc26014727d1dc85b5fcc07f4803caf777f87a
-
-
-then the equivalent ``dask-chtc jupyter`` command would be
+For example, if you normally start up a Jupyter Lab instance with ``jupyter
+lab``. The equivalent command for Dask-CHTC is ``dask-chtc jupyter run lab``
+command would be
 
 .. code-block:: console
 
@@ -89,9 +75,8 @@ then the equivalent ``dask-chtc jupyter`` command would be
             http://localhost:8888/?token=fedee94f539b0beea492bb358d549ed79025b714f3b308c4
          or http://127.0.0.1:8888/?token=fedee94f539b0beea492bb358d549ed79025b714f3b308c4
 
-Note the HTCondor job events are mixed into the output stream.
-This is purely for diagnostic purposes;
-you may (for example) find them helpful if your notebook server job is
+HTCondor job events outputs some diagnostic information into this output
+stream. These messages may be helpful if your notebook server job is
 unexpectedly interrupted.
 
 Just like running ``jupyter lab``, if you press Control-C,
