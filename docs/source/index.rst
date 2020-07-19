@@ -50,6 +50,11 @@ These pages will walk you through the various aspects of using Dask-CHTC:
 :doc:`installation`
     How to install Python and Dask-CHTC on a CHTC submit node.
 
+:doc:`example`
+    A brief example Jupyter notebook,
+    showing how to start up a :class:`CHTCCluster`
+    and use it to perform some calculations.
+
 :doc:`jupyter`
     How to use Dask-CHTC to run a Jupyter notebook server on a CHTC submit node.
 
@@ -58,11 +63,6 @@ These pages will walk you through the various aspects of using Dask-CHTC:
     how to forward ports over SSH,
     which will allow you to connect to
     Jupyter notebooks and Dask dashboards running on CHTC submit nodes.
-
-:doc:`example`
-    A brief example Jupyter notebook,
-    showing how to start up a :class:`CHTCCluster`
-    and use it to perform some calculations.
 
 :doc:`docker`
     Information on how to build Docker images for use with Dask-CHTC.
