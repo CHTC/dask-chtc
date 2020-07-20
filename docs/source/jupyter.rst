@@ -86,8 +86,8 @@ command would be
             http://localhost:8888/?token=fedee94f539b0beea492bb358d549ed79025b714f3b308c4
          or http://127.0.0.1:8888/?token=fedee94f539b0beea492bb358d549ed79025b714f3b308c4
 
-HTCondor job events outputs some diagnostic information into this output
-stream. These messages may be helpful if your notebook server job is
+Dask-CHTC mixes HTCondor job diagnostic information into the normal Jupyter output stream.
+These messages may be helpful if your notebook server job is
 unexpectedly interrupted.
 
 Just like running ``jupyter lab``, if you press Control-C,
