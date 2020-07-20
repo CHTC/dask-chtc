@@ -2,17 +2,15 @@
 
 .. py:currentmodule:: dask_chtc
 
+This pages assumes the Jupyter is available. For more details on connecting to
+Jupyter, see :ref:`forward ports over SSH <networking>`. This page will only
+detail how to start Jupyter.
 
 Running Jupyter through Dask-CHTC
 =================================
 
 .. attention::
 
-    You will need to learn how to
-    :ref:`forward ports over SSH <networking>`
-    to actually connect to the Jupyter notebook servers that you will learn
-    how to run here. We recommend skimming this page, then reading about
-    port forwarding, then coming back here to try out the commands in full.
 
 .. warning::
 
@@ -23,15 +21,13 @@ You may want to interact with your Dask cluster through a
 `Jupyter notebook <https://jupyter.org/>`_.
 Dask-CHTC provides a way to run a Jupyter notebook server on a CHTC submit node.
 
-
 .. _Jupyter install documentation: https://jupyter.org/install
 
 .. warning::
 
-   Jupyter must be installed. This amounts to following the
-   `Jupyter install documentation`_, which amounts to running
-   ``conda install -c conda-forge jupyterlab`` or adding `jupyter` to the
-   ``environment.yml`` file.
+   Jupyter must be installed, which amounts to running ``conda install
+   jupyterlab`` or adding `jupyter` to your ``environment.yml`` file. For more
+   detail, see the `Jupyter install documentation`_,
 
 You can run a notebook server via the Dask-CHTC command line tool, via the
 ``jupyter`` subcommand.
@@ -67,9 +63,8 @@ It is designed to mimic the behavior of running a Jupyter notebook server on
 your local machine. Any command line arguments you pass to it will be
 passed to the actual ``jupyter`` command line tool.
 
-For example, if you normally start up a Jupyter Lab instance with ``jupyter
-lab``. The equivalent command for Dask-CHTC is ``dask-chtc jupyter run lab``
-command would be
+Jupyter Lab instances are normally started with ``jupyter
+lab``. The equivalent command for Dask-CHTC is ``dask-chtc jupyter run lab``:
 
 .. code-block:: console
 
