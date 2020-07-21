@@ -11,6 +11,9 @@ echo
 cd "$_CONDOR_SCRATCH_DIR" || exit 1
 pwd
 
+conda create --name worker --clone base --prefix "$_CONDOR_SCRATCH_DIR"/.env
+conda activate "$_CONDOR_SCRATCH_DIR"/.env
+
 # Install extra user-specified packages
 conda_env=$(grep CondaEnv "$_CONDOR_JOB_AD" | cut -d'"' -f2)
 if [ -n "$conda_env" ]; then
@@ -20,7 +23,7 @@ if [ -n "$conda_env" ]; then
     echo "Conda environment for update:"
     cat "$env_file"
     echo
-    conda env update -f "$env_file"
+    conda env update --file "$env_file"
 fi
 
 conda_packages=$(grep ExtraCondaPackages "$_CONDOR_JOB_AD" | cut -d'"' -f2)
@@ -28,16 +31,17 @@ if [ -n "$conda_packages" ]; then
     echo "Installing extra conda packages..."
     # We want the packages split into separate args
     # shellcheck disable=SC2086
-    conda install -y $conda_packages
-    conda clean --all -y
+    conda install --yes $conda_packages
 fi
+
+conda clean --all --yes
 
 pip_packages=$(grep ExtraPipPackages "$_CONDOR_JOB_AD" | cut -d'"' -f2)
 if [ -n "$pip_packages" ]; then
     echo "Installing extra pip packages..."
     # We want the packages split into separate args
     # shellcheck disable=SC2086
-    pip --no-cache-dir install $pip_packages
+    pip install --user --no-cache-dir $pip_packages
 fi
 
 # Wait for the job ad to be updated with <service>_HostPort
