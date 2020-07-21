@@ -1,11 +1,44 @@
 #!/usr/bin/env bash
 
-set -x
+set -xu
 
 echo "Dask-CHTC entrypoint executing..."
 echo "Incoming command is:"
 echo "$@"
 echo
+
+# Make sure we're in the _CONDOR_SCRATCH_DIR
+cd "$_CONDOR_SCRATCH_DIR" || exit 1
+pwd
+
+# Install extra user-specified packages
+conda_env=$(grep CondaEnv "$_CONDOR_JOB_AD" | cut -d'"' -f2)
+if [ -n "$conda_env" ]; then
+    echo "Updating conda environment..."
+    env_file="$_CONDOR_SCRATCH_DIR"/environment.yml
+    echo -e "$conda_env" > "$env_file"
+    echo "Conda environment for update:"
+    cat "$env_file"
+    echo
+    conda env update -f "$env_file"
+fi
+
+conda_packages=$(grep ExtraCondaPackages "$_CONDOR_JOB_AD" | cut -d'"' -f2)
+if [ -n "$conda_packages" ]; then
+    echo "Installing extra conda packages..."
+    # We want the packages split into separate args
+    # shellcheck disable=SC2086
+    conda install -y $conda_packages
+    conda clean --all -y
+fi
+
+pip_packages=$(grep ExtraPipPackages "$_CONDOR_JOB_AD" | cut -d'"' -f2)
+if [ -n "$pip_packages" ]; then
+    echo "Installing extra pip packages..."
+    # We want the packages split into separate args
+    # shellcheck disable=SC2086
+    pip --no-cache-dir install $pip_packages
+fi
 
 # Wait for the job ad to be updated with <service>_HostPort
 # This happens during the first update, usually a few seconds after the job starts
