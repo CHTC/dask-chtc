@@ -15,7 +15,7 @@ pwd
 . /opt/conda/etc/profile.d/conda.sh
 conda activate base
 
-export CONDA_PKGS_DIRS="/opt/conda/pkgs/,$_CONDOR_SCRATCH_DIR/.pkgs"
+export CONDA_PKGS_DIRS="$_CONDOR_SCRATCH_DIR/.pkgs"
 
 conda create --clone base --prefix "$_CONDOR_SCRATCH_DIR"/.env
 conda activate "$_CONDOR_SCRATCH_DIR"/.env
