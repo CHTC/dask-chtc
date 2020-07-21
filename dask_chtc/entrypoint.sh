@@ -11,6 +11,12 @@ echo
 cd "$_CONDOR_SCRATCH_DIR" || exit 1
 pwd
 
+# shellcheck disable=SC1091
+. /opt/conda/etc/profile.d/conda.sh
+conda activate base
+
+export CONDA_PKGS_DIRS="/opt/conda/pkgs/,$_CONDOR_SCRATCH_DIR/.pkgs"
+
 conda create --clone base --prefix "$_CONDOR_SCRATCH_DIR"/.env
 conda activate "$_CONDOR_SCRATCH_DIR"/.env
 
