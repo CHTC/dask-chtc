@@ -11,7 +11,7 @@ echo
 cd "$_CONDOR_SCRATCH_DIR" || exit 1
 pwd
 
-conda create --name worker --clone base --prefix "$_CONDOR_SCRATCH_DIR"/.env
+conda create --clone base --prefix "$_CONDOR_SCRATCH_DIR"/.env
 conda activate "$_CONDOR_SCRATCH_DIR"/.env
 
 # Install extra user-specified packages
