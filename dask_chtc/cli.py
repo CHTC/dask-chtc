@@ -148,7 +148,7 @@ def jupyter():
     The "run" subcommand runs the notebook server as if you had started it
     yourself. If your terminal session ends, the notebook server will also stop.
 
-    The "started" subcommand runs the notebook server as a persistent HTCondor
+    The "start" subcommand runs the notebook server as a persistent HTCondor
     job: it will not be removed if your terminal session ends.
     The "status" subcommand can then be used to get information about your
     notebook server (like its contact address, to put into your web browser).
