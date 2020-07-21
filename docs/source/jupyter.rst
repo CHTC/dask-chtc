@@ -6,16 +6,21 @@ This pages assumes the Jupyter is available. For more details on connecting to
 Jupyter, see :ref:`forward ports over SSH <networking>`. This page will only
 detail how to start Jupyter.
 
-Running Jupyter through Dask-CHTC
-=================================
-
-.. attention::
-
-
 .. warning::
 
     **Do not** run Jupyter notebook servers on CHTC submit nodes except through
     the process described on this page.
+
+    Launching Jupyter with this process allows the CHTC admins to effectively
+    monitor resource usage in the Jupyter process and debug/info messages to be
+    more easily displayed.  If you persist the Jupyter session through other
+    means like tmux, the CHTC admins may kill your entire tmux session if it
+    consumes too much CPU and memory.
+
+Running Jupyter through Dask-CHTC
+=================================
+
+.. attention::
 
 You may want to interact with your Dask cluster through a
 `Jupyter notebook <https://jupyter.org/>`_.
