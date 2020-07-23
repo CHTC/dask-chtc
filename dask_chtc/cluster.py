@@ -122,18 +122,7 @@ class CHTCCluster(HTCondorCluster):
         # this mainly effects the client and scheduler.
         security.ensure_certs()
         modified["protocol"] = "tls://"
-        ca_file = str(security.CA_FILE)
-        cert_file = str(security.CERT_FILE)
-        modified["security"] = Security(
-            tls_ca_file=ca_file,
-            tls_worker_cert=cert_file,
-            tls_worker_key=cert_file,
-            tls_client_cert=cert_file,
-            tls_client_key=cert_file,
-            tls_scheduler_cert=cert_file,
-            tls_scheduler_key=cert_file,
-            require_encryption=True,
-        )
+        modified["security"] = cls.security()
 
         # TODO: there are race conditions in port selection.
         # These get forwarded to the Dask scheduler.
@@ -210,6 +199,27 @@ class CHTCCluster(HTCondorCluster):
         ]
 
         return modified
+
+    @classmethod
+    def security(cls):
+        """
+        Return the Dask ``Security`` object used by Dask-CHTC.
+        Can also be used to create a new Dask ``Client`` with the correct
+        security settings for connecting to your workers, e.g. if you started
+        your :class:`CHTCCluster` via the Dask JupyterLab extension.
+        """
+        ca_file = str(security.CA_FILE)
+        cert_file = str(security.CERT_FILE)
+        return Security(
+            tls_ca_file=ca_file,
+            tls_worker_cert=cert_file,
+            tls_worker_key=cert_file,
+            tls_client_cert=cert_file,
+            tls_client_key=cert_file,
+            tls_scheduler_cert=cert_file,
+            tls_scheduler_key=cert_file,
+            require_encryption=True,
+        )
 
 
 def merge(*mappings: Optional[Mapping[Any, Any]]) -> Mapping[Any, Any]:
