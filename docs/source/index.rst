@@ -97,13 +97,19 @@ can be found on these pages:
    jupyter
    networking
    example
-   docker
-   troubleshooting
 
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Interfaces
+   :caption: Getting It Working
+
+   troubleshooting
+   docker
+
+.. toctree::
+   :maxdepth: 2
+   :hidden:
+   :caption: Getting the Details
 
    api
    cli

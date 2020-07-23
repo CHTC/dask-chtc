@@ -9,8 +9,8 @@ Troubleshooting
 Jupyter
 -------
 
-My Jupyter notebook server is stuck in the ``REMOVED`` state
-++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Jupyter notebook server is stuck in the ``REMOVED`` state
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 If something goes wrong during a normal ``dask-chtc jupyter stop``, you may
 find that your notebook server will refuse to shut down.
