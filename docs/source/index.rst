@@ -67,6 +67,10 @@ These pages will walk you through the various aspects of using Dask-CHTC:
 :doc:`docker`
     Information on how to build Docker images for use with Dask-CHTC.
 
+:doc:`troubleshooting`
+    Solutions and advice for tackling specific problems that might arise
+    while using Dask-CHTC.
+
 Detailed information on the Python API
 and the associated command line tool
 can be found on these pages:
@@ -94,11 +98,12 @@ can be found on these pages:
    networking
    example
    docker
+   troubleshooting
 
 .. toctree::
    :maxdepth: 2
    :hidden:
-   :caption: Reference
+   :caption: Interfaces
 
    api
    cli

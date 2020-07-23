@@ -516,7 +516,6 @@ class JupyterJobManager:
                 )
             else:
                 kill_proc_tree(find_notebook_server_process())
-
         except Exception:
             logger.exception(f"Failed to remove Jupyter notebook server job!")
             raise
@@ -585,23 +584,26 @@ BREAK_ON_JOB_EVENTS = {
 }
 
 
-def find_notebook_server_process() -> Optional[psutil.Process]:
+def find_notebook_server_process() -> psutil.Process:
     """
     Find the current user's running notebook server process by looking for a
-    marker environment variable (and matching against their username).
+    marker environment variable and matching against their username.
+
+    Raises an exception if there were no matches.
     """
-    me = getpass.getuser()
+    username = getpass.getuser()
     for proc in psutil.process_iter(attrs=["username", "environ"]):
         if (
-            proc.info["username"] == me
+            proc.info["username"] == username
             and (proc.info["environ"] or {}).get(MARKER_KEY) == MARKER_VALUE
         ):
             return proc
-    return None
+
+    raise Exception("Couldn't find Jupyter notebook server process for current user.")
 
 
 def kill_proc_tree(
-    process: psutil.Process, signal: signal.Signals = signal.SIGKILL, timeout=None
+    process: psutil.Process, signal: signal.Signals = signal.SIGKILL, timeout: Optional[int] = None
 ) -> Tuple[Tuple[psutil.Process, ...], Tuple[psutil.Process, ...]]:
     """
     Kill a process tree
