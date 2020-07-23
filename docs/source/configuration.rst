@@ -21,26 +21,31 @@ Configuring Dask-CHTC
 Dask-CHTC's :class:`CHTCCluster` is a type of Dask-Jobqueue cluster, so it is
 configured through
 `Dask-Jobqueue's configuration system <https://jobqueue.dask.org/en/latest/configuration-setup.html>`_.
-This is the default configuration file included with Dask-CHTC, which forms the
-base configuration that you can then modify:
+
+This is the default configuration file included with Dask-CHTC:
 
 .. literalinclude:: ../../dask_chtc/jobqueue-chtc.yaml
     :language: yaml
 
-A copy of this file with everything commented out will be placed in
+A copy of this file (with everything commented out) will be placed in
 ``~/.config/dask/jobqueue-chtc.yaml`` the first time you run Dask-CHTC.
-
-Options in this file are used as defaults for the runtime arguments of
+Options found in that file are used as defaults for the runtime arguments of
 :class:`CHTCCluster` and its parent classes in Dask-Jobqueue, starting with
 :class:`dask_jobqueue.HTCondorCluster`.
 You can override any of them at runtime by passing different arguments to the
 :class:`CHTCCluster` constructor.
 
-Dask-CHTC provides a command line tool to help inspect and edit this
+Dask-CHTC provides a command line tool to help inspect and edit its
 configuration file. For full details, run ``dask-chtc config --help``.
 The subcommands of ``dask-chtc config`` will (among other things)
 let you show the contents of the configuration file, open it in your editor,
 and reset it to the package defaults.
+
+.. warning::
+
+    Dask-CHTC is prototype software, and the names and meanings of configuration
+    options are not necessarily stable. Be prepared to reset your configuration
+    to track changes in Dask-CHTC!
 
 
 Configuring the Dask JupyterLab Extension
