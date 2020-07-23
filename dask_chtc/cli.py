@@ -1,18 +1,22 @@
+import functools
 import getpass
 import logging
+import os
 import re
+import signal
 import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
 from pprint import pformat
-from typing import List, Mapping, Optional
+from typing import List, Mapping, Optional, Tuple
 
 import classad
 import click
 import dask
 import htcondor
 import humanize
+import psutil
 from click_didyoumean import DYMGroup
 from watchdog import events
 from watchdog.observers import Observer
@@ -218,11 +222,24 @@ def start(jupyter_args):
 
 
 @jupyter.command()
-def stop():
+@click.option(
+    "--force",
+    "-f",
+    is_flag=True,
+    default=False,
+    help="Stop your notebook server without giving it a chance to clean up.",
+)
+def stop(force):
     """
     Stop a Jupyter notebook server that was started via "start".
+
+    If the --force option is given, the notebook server will be killed without
+    giving it time to shutdown cleanly. We recommend always trying a normal stop
+    first, then stopping it again with --force only if it is stuck in the
+    REMOVED state for more than a few minutes
+    (use the "status" subcommand to see its current state).
     """
-    JupyterJobManager().connect().stop()
+    JupyterJobManager().connect().stop(force=force)
 
 
 @jupyter.command()
@@ -238,6 +255,9 @@ def status(raw):
 
     If you have started a Jupyter notebook server in the past and need to
     find it's address again, use this command.
+
+    If you are trying to shut down your notebook server job and it is stuck in
+    the REMOVED state, try running "dask-chtc jupyter stop --force".
     """
     now = datetime.utcnow().replace(tzinfo=timezone.utc)
 
@@ -370,7 +390,8 @@ class EchoingEventHandler(events.FileSystemEventHandler):
             click.secho(line.rstrip(), fg=self.color, err=True)
 
 
-MARKER = "IsDaskCHTCJupyterNotebookServer"
+MARKER_KEY = "IsDaskCHTCJupyterNotebookServer"
+MARKER_VALUE = "true"
 
 
 class JupyterJobManager:
@@ -389,7 +410,9 @@ class JupyterJobManager:
     def discover(cls) -> Job:
         schedd = htcondor.Schedd()
 
-        query = schedd.query(constraint=f"Owner == {classad.quote(getpass.getuser())} && {MARKER}",)
+        query = schedd.query(
+            constraint=f"Owner == {classad.quote(getpass.getuser())} && {MARKER_KEY}",
+        )
         if len(query) == 0:
             raise click.ClickException(
                 "Was not able to find a running Jupyter notebook server job!"
@@ -422,7 +445,9 @@ class JupyterJobManager:
                 contact_addresses.add(match.group(0))
 
         if len(contact_addresses) == 0:
-            raise Exception("Could not find contact address for Jupyter notebook server from logs")
+            raise click.ClickException(
+                "Could not find contact address for Jupyter notebook server from logs; wait a few seconds and try again."
+            )
 
         # TODO: this choice is extremely arbitrary...
         return sorted(contact_addresses)[0]
@@ -449,9 +474,14 @@ class JupyterJobManager:
                 "stream_output": "true",
                 "stream_error": "true",
                 "getenv": "true",
+                "environment": f"{MARKER_KEY}={MARKER_VALUE}",
                 "transfer_executable": "false",
                 "transfer_output_files": '""',
-                f"My.{MARKER}": "true",
+                # job_max_vacate_time doesn't actually work in local universe,
+                # but might some day:
+                # https://htcondor-wiki.cs.wisc.edu/index.cgi/tktview?tn=7746
+                "job_max_vacate_time": "60",
+                f"My.{MARKER_KEY}": MARKER_VALUE,
             }
         )
 
@@ -471,24 +501,24 @@ class JupyterJobManager:
 
         for event in self.events:
             text = str(event).rstrip()
-            if event.type in (htcondor.JobEventType.JOB_HELD, htcondor.JobEventType.JOB_TERMINATED):
-                click.secho(text, err=True, fg="red")
-            elif event.type is htcondor.JobEventType.JOB_ABORTED:
-                click.secho(text, err=True, fg="white")
+            click.secho(text, err=True, fg=JOB_EVENT_TO_COLOR.get(event.type, "white"))
+            if event.type in BREAK_ON_JOB_EVENTS:
                 break
-            else:
-                click.secho(text, err=True, fg="white")
 
-    def remove_job(self) -> None:
+    def remove_job(self, force: bool = False) -> None:
         try:
-            schedd = htcondor.Schedd()
-            schedd.act(
-                htcondor.JobAction.Remove,
-                [f"{self.cluster_id}.0"],
-                "Shut down Jupyter notebook server",
-            )
+            if not force:
+                schedd = htcondor.Schedd()
+                schedd.act(
+                    htcondor.JobAction.Remove,
+                    [f"{self.cluster_id}.0"],
+                    "Shut down Jupyter notebook server",
+                )
+            else:
+                kill_proc_tree(find_notebook_server_process())
         except Exception:
             logger.exception(f"Failed to remove Jupyter notebook server job!")
+            raise
 
     def start_echoing(self) -> None:
         if self.observer is not None:
@@ -527,9 +557,9 @@ class JupyterJobManager:
 
         return stamp
 
-    def stop(self) -> None:
+    def stop(self, force: bool = False) -> None:
         self.start_echoing()
-        self.remove_job()
+        self.remove_job(force=force)
         self.watch_events()
         self.stop_echoing()
         self.rotate_files()
@@ -540,3 +570,49 @@ class JupyterJobManager:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.stop()
+
+
+JOB_EVENT_TO_COLOR = {
+    htcondor.JobEventType.JOB_HELD: "red",
+    htcondor.JobEventType.JOB_TERMINATED: "red",
+    htcondor.JobEventType.JOB_ABORTED: "green",
+}
+BREAK_ON_JOB_EVENTS = {
+    htcondor.JobEventType.JOB_HELD,
+    htcondor.JobEventType.JOB_TERMINATED,
+    htcondor.JobEventType.JOB_ABORTED,
+}
+
+
+def find_notebook_server_process() -> psutil.Process:
+    """
+    Find the current user's running notebook server process by looking for a
+    marker environment variable and matching against their username.
+
+    Raises an exception if there were no matches.
+    """
+    username = getpass.getuser()
+    for proc in psutil.process_iter(attrs=["username", "environ"]):
+        if (
+            proc.info["username"] == username
+            and (proc.info["environ"] or {}).get(MARKER_KEY) == MARKER_VALUE
+        ):
+            return proc
+
+    raise Exception("Couldn't find Jupyter notebook server process for current user.")
+
+
+def kill_proc_tree(
+    process: psutil.Process, signal: signal.Signals = signal.SIGKILL, timeout: Optional[int] = None
+) -> Tuple[Tuple[psutil.Process, ...], Tuple[psutil.Process, ...]]:
+    """
+    Kill a process tree
+    and return a (gone, still_alive) tuple after the timeout has expired.
+
+    Adapted from https://psutil.readthedocs.io/en/latest/#kill-process-tree
+    """
+    to_kill = [process] + process.children(recursive=True)
+    for p in to_kill:
+        p.send_signal(signal)
+    gone, alive = psutil.wait_procs(to_kill, timeout=timeout)
+    return gone, alive
