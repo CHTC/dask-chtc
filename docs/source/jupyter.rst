@@ -2,9 +2,10 @@
 
 .. py:currentmodule:: dask_chtc
 
-This pages assumes the Jupyter is available. For more details on connecting to
-Jupyter, see :ref:`forward ports over SSH <networking>`. This page will only
-detail how to start Jupyter.
+This pages assumes that Jupyter is available.
+For more details on connecting to
+Jupyter, see :ref:`the guide on port forwarding <networking>`.
+This page will only detail how to start Jupyter.
 
 .. warning::
 
@@ -22,17 +23,17 @@ Running Jupyter through Dask-CHTC
 
 .. attention::
 
-You may want to interact with your Dask cluster through a
-`Jupyter notebook <https://jupyter.org/>`_.
-Dask-CHTC provides a way to run a Jupyter notebook server on a CHTC submit node.
+    You may want to interact with your Dask cluster through a
+    `Jupyter notebook <https://jupyter.org/>`_.
+    Dask-CHTC provides a way to run a Jupyter notebook server on a CHTC submit node.
 
 .. _Jupyter install documentation: https://jupyter.org/install
 
 .. warning::
 
-   Jupyter must be installed, which amounts to running ``conda install
-   jupyterlab`` or adding `jupyter` to your ``environment.yml`` file. For more
-   detail, see the `Jupyter install documentation`_,
+    Jupyter must be installed, which amounts to running ``conda install
+    jupyterlab`` or adding `jupyter` to your ``environment.yml`` file. For more
+    detail, see the `Jupyter install documentation`_,
 
 You can run a notebook server via the Dask-CHTC command line tool, via the
 ``jupyter`` subcommand.
@@ -68,8 +69,8 @@ It is designed to mimic the behavior of running a Jupyter notebook server on
 your local machine. Any command line arguments you pass to it will be
 passed to the actual ``jupyter`` command line tool.
 
-Jupyter Lab instances are normally started with ``jupyter
-lab``. The equivalent command for Dask-CHTC is ``dask-chtc jupyter run lab``:
+Jupyter Lab instances are normally started with ``jupyter lab``.
+The equivalent command for Dask-CHTC is ``dask-chtc jupyter run lab``:
 
 .. code-block:: console
 
@@ -86,7 +87,8 @@ lab``. The equivalent command for Dask-CHTC is ``dask-chtc jupyter run lab``:
             http://localhost:8888/?token=fedee94f539b0beea492bb358d549ed79025b714f3b308c4
          or http://127.0.0.1:8888/?token=fedee94f539b0beea492bb358d549ed79025b714f3b308c4
 
-Dask-CHTC mixes HTCondor job diagnostic information into the normal Jupyter output stream.
+Dask-CHTC mixes HTCondor job diagnostic information into the
+normal Jupyter output stream.
 These messages may be helpful if your notebook server job is
 unexpectedly interrupted.
 
