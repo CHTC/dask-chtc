@@ -73,3 +73,28 @@ Configuration options set via ``~/.config/dask/jobqueue-chtc.yaml`` will be
 honored by the JupyterLab extension; note that you are specifying arguments
 in the extension configuration file as if you were calling the
 :class:`CHTCCluster` constructor directly.
+
+To connect to the cluster created by the lab extension, you must pass
+the appropriate security options through.
+First, get the security options:
+
+.. code-block:: python
+
+    from dask_chtc import CHTCCluster
+
+    sec = CHTCCluster.security()
+
+Then, (after creating a new cluster by clicking ``+NEW``),
+click the ``<>`` button to insert a cell with the right cluster address:
+
+.. image:: _static/labextension.png
+
+And modify it to use the security options
+by adding the ``security`` keyword argument:
+
+.. code-block:: python
+
+    from dask.distributed import Client
+
+    client = Client("tls://128.104.100.44:3003", security=sec)
+    client
