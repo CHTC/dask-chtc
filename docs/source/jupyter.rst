@@ -2,25 +2,37 @@
 
 .. py:currentmodule:: dask_chtc
 
-Running Jupyter through Dask-CHTC
-=================================
-
-You may want to interact with your Dask cluster through a
-`Jupyter notebook <https://jupyter.org/>`_.
-Dask-CHTC provides a way to run a Jupyter notebook server on a CHTC submit node.
+This pages assumes the Jupyter is available. For more details on connecting to
+Jupyter, see :ref:`forward ports over SSH <networking>`. This page will only
+detail how to start Jupyter.
 
 .. warning::
 
     **Do not** run Jupyter notebook servers on CHTC submit nodes except through
     the process described on this page.
 
+    Launching Jupyter with this process allows the CHTC admins to effectively
+    monitor resource usage in the Jupyter process and debug/info messages to be
+    more easily displayed.  If you persist the Jupyter session through other
+    means like tmux, the CHTC admins may kill your entire tmux session if it
+    consumes too much CPU and memory.
+
+Running Jupyter through Dask-CHTC
+=================================
+
 .. attention::
 
-    You will need to learn how to
-    :ref:`forward ports over SSH <networking>`
-    to actually connect to the Jupyter notebook servers that you will learn
-    how to run here. We recommend skimming this page, then reading about
-    port forwarding, then coming back here to try out the commands in full.
+You may want to interact with your Dask cluster through a
+`Jupyter notebook <https://jupyter.org/>`_.
+Dask-CHTC provides a way to run a Jupyter notebook server on a CHTC submit node.
+
+.. _Jupyter install documentation: https://jupyter.org/install
+
+.. warning::
+
+   Jupyter must be installed, which amounts to running ``conda install
+   jupyterlab`` or adding `jupyter` to your ``environment.yml`` file. For more
+   detail, see the `Jupyter install documentation`_,
 
 You can run a notebook server via the Dask-CHTC command line tool, via the
 ``jupyter`` subcommand.
@@ -55,24 +67,9 @@ The ``run`` subcommand is the simplest way to launch a Jupyter notebook server.
 It is designed to mimic the behavior of running a Jupyter notebook server on
 your local machine. Any command line arguments you pass to it will be
 passed to the actual ``jupyter`` command line tool.
-For example, if you normally start up a Jupyter Lab instance by running
 
-.. code-block:: console
-
-    $ jupyter lab
-    [... Jupyter startup logs cut ...]
-    [I 10:31:41.908 LabApp] Use Control-C to stop this server and shut down all kernels (twice to skip confirmation).
-    [W 10:31:41.966 LabApp] No web browser found: could not locate runnable browser.
-    [C 10:31:41.967 LabApp]
-
-        To access the notebook, open this file in a browser:
-            file:///home/karpel/.local/share/jupyter/runtime/nbserver-2176065-open.html
-        Or copy and paste one of these URLs:
-            http://localhost:8888/?token=9af0f23248bc26014727d1dc85b5fcc07f4803caf777f87a
-         or http://127.0.0.1:8888/?token=9af0f23248bc26014727d1dc85b5fcc07f4803caf777f87a
-
-
-then the equivalent ``dask-chtc jupyter`` command would be
+Jupyter Lab instances are normally started with ``jupyter
+lab``. The equivalent command for Dask-CHTC is ``dask-chtc jupyter run lab``:
 
 .. code-block:: console
 
@@ -89,9 +86,8 @@ then the equivalent ``dask-chtc jupyter`` command would be
             http://localhost:8888/?token=fedee94f539b0beea492bb358d549ed79025b714f3b308c4
          or http://127.0.0.1:8888/?token=fedee94f539b0beea492bb358d549ed79025b714f3b308c4
 
-Note the HTCondor job events are mixed into the output stream.
-This is purely for diagnostic purposes;
-you may (for example) find them helpful if your notebook server job is
+Dask-CHTC mixes HTCondor job diagnostic information into the normal Jupyter output stream.
+These messages may be helpful if your notebook server job is
 unexpectedly interrupted.
 
 Just like running ``jupyter lab``, if you press Control-C,

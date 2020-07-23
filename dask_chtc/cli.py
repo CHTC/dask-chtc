@@ -455,7 +455,8 @@ class JupyterJobManager:
     def start(self, jupyter_args: List[str]) -> "JupyterJobManager":
         if self.has_running_job():
             raise click.ClickException(
-                'You already have a running Jupyter notebook server; try the "status" subcommand to see it.'
+                "You already have a running Jupyter notebook server; "
+                'use "dask-chtc jupyter status" subcommand to see it\'s logs.'
             )
 
         self.prep_log_files()
