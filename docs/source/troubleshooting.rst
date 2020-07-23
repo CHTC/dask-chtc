@@ -5,6 +5,58 @@
 Troubleshooting
 ===============
 
+Dask
+----
+
+``unsupported pickle protocol: 5``
+++++++++++++++++++++++++++++++++++
+
+If you get an error with the reason ``unsupported pickle protocol: 5``,
+like
+
+.. code-block:: pytb
+
+    distributed.protocol.core - CRITICAL - Failed to deserialize
+    Traceback (most recent call last):
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/protocol/core.py", line 130, in loads
+        value = _deserialize(head, fs, deserializers=deserializers)
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/protocol/serialize.py", line 302, in deserialize
+        return loads(header, frames)
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/protocol/serialize.py", line 64, in pickle_loads
+        return pickle.loads(x, buffers=buffers)
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/protocol/pickle.py", line 75, in loads
+        return pickle.loads(x)
+    ValueError: unsupported pickle protocol: 5
+    distributed.utils - ERROR - unsupported pickle protocol: 5
+    Traceback (most recent call last):
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/utils.py", line 656, in log_errors
+        yield
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/client.py", line 1221, in _handle_report
+        msgs = await self.scheduler_comm.comm.read()
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/comm/tcp.py", line 206, in read
+        allow_offload=self.allow_offload,
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/comm/utils.py", line 87, in from_frames
+        res = _from_frames()
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/comm/utils.py", line 66, in _from_frames
+        frames, deserialize=deserialize, deserializers=deserializers
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/protocol/core.py", line 130, in loads
+        value = _deserialize(head, fs, deserializers=deserializers)
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/protocol/serialize.py", line 302, in deserialize
+        return loads(header, frames)
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/protocol/serialize.py", line 64, in pickle_loads
+        return pickle.loads(x, buffers=buffers)
+      File "/home/karpel/miniconda3/lib/python3.7/site-packages/distributed/protocol/pickle.py", line 75, in loads
+        return pickle.loads(x)
+    ValueError: unsupported pickle protocol: 5
+
+You are encountering an issue with mismatched Python versions between
+your Dask client and the workers.
+Python 3.8 introduced a new default protocol for Python's ``pickle`` module,
+which Dask uses to move some kinds of data around.
+In general, **you should always make sure that your Python versions match**.
+For this specific issue, you just need to make sure that you are using
+Python 3.7 or less (or Python 3.8 or greater) for both the Dask client
+and the workers.
 
 Jupyter
 -------
