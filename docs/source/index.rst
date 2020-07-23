@@ -72,6 +72,9 @@ specific use cases:
     Solutions and advice for tackling specific problems that might arise
     while using Dask-CHTC.
 
+:doc:`configuration`
+    Information on how to configure Dask-CHTC and the Dask JupyterLab extension.
+
 :doc:`docker`
     Information on how to build Docker images for use with Dask-CHTC.
 
@@ -109,6 +112,7 @@ can be found on these pages:
    :caption: Getting It Working
 
    troubleshooting
+   configuration
    docker
 
 .. toctree::

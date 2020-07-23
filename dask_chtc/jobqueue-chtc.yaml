@@ -1,14 +1,17 @@
 jobqueue:
   chtc:
+    # The internal name prefix for the Dask workers
     name: dask-worker
+
+    # The HTCondor JobBatchName for the worker jobs.
+    batch-name: dask-worker
 
     # Worker job resource requests and other options.
     cores: 1                # Number of cores per worker job
     gpus: null              # Number of GPUs per worker job
     memory: "2 GiB"         # Amount of memory per worker job
     disk: "10 GiB"          # Amount of disk per worker job
-    processes: null         # Number of Python processes for each worker (null lets Dask decide)
-    local-directory: null
+    processes: null         # Number of Python processes per worker (null lets Dask decide)
 
     # Whether to use GPULab machines.
     gpu-lab: false
@@ -18,9 +21,6 @@ jobqueue:
 
     # Send HTCondor job log files to this directory
     log-directory: null
-
-    # Number of seconds to wait if a worker can not find a scheduler.
-    death-timeout: 60
 
     # Extra command line arguments for the Dask worker.
     extra: []
@@ -34,13 +34,17 @@ jobqueue:
     # Extra options for the Dask scheduler
     scheduler-options: {}
 
-    # The HTCondor JobBatchName to apply to the worker jobs.
-    batch-name: dask-worker
+    # Number of seconds to die after if the worker can not find a scheduler.
+    death-timeout: 60
+
+    # INTERNAL OPTIONS BELOW
+    # You probably don't need to change these!
+
+    # Directory to spill extra worker memory to (null lets Dask decide)
+    local-directory: null
 
     # Controls the shebang of the job submit file that jobqueue will generate.
-    # You probably don't need to change this!
     shebang: "#!/usr/bin/env condor_submit"
 
     # Networking options.
-    # You probably don't need to change these!
-    interface: null             # Network interface to use like eth0 or ib0
+    interface: null
