@@ -3,6 +3,7 @@ import datetime
 import logging
 import math
 import random
+import socket
 from pathlib import Path
 from typing import Any, Dict, Iterable, Mapping, Optional, Set, Union
 
@@ -23,16 +24,32 @@ ENTRYPOINT_SCRIPT_PATH = (PACKAGE_DIR / "entrypoint.sh").absolute()
 PORT_INSIDE_CONTAINER = 8787
 SCHEDULER_PORTS = set(range(3000, 4000))
 
+CHTC_CM = "cm.chtc.wisc.edu"
+
 
 class CHTCJob(HTCondorJob):
     config_name = "chtc"
 
-    def __init__(self, *args, **kwargs):
+    def __init__(
+        self, *args, remote: Optional[bool] = None, remote_schedd: Optional[str] = None, **kwargs
+    ):
         # Suppress automatic addition of TLS config options to the worker args
         # (so that we can add our own in entrypoint.sh).
         kwargs.pop("security")
 
+        if should_remote_submit(remote):
+            r = f"-pool {CHTC_CM} -remote {remote_schedd}"
+            self.submit_command = f"condor_submit {r}"
+            self.cancel_command = f"condor_rm {r}"
+
         super().__init__(*args, **kwargs)
+
+
+def should_remote_submit(remote: Optional[bool]) -> bool:
+    on_chtc_machine = socket.gethostname().endswith("chtc.wisc.edu")
+
+    # the "is False" is unnecessary, but (hopefully) helps clarify the logic
+    return remote is False or (remote is None and not on_chtc_machine)
 
 
 T_PORT_ARG = Union[int, Iterable[int]]
@@ -60,6 +77,8 @@ class CHTCCluster(HTCondorCluster):
         gpus: Optional[int] = None,
         batch_name: Optional[str] = None,
         python: str = "./entrypoint.sh python3",
+        remote: Optional[bool] = None,
+        remote_schedd: Optional[str] = "submit3.chtc.wisc.edu",
         **kwargs: Any,
     ):
         """
@@ -86,6 +105,17 @@ class CHTCCluster(HTCondorCluster):
         python
             The command to execute to start Python inside the worker job.
             Only modify this if you know what you're doing!
+        remote
+            If ``True``, Dask-CHTC will submit worker jobs remotely.
+            If ``False``, Dask-CHTC will submit workers job locally.
+            If ``None``, Dask-CHTC will attempt to decide which to do based
+            on the hostname of the machine you are running on.
+            You will need to submit remotely if you are running Dask-CHTC
+            from your own machine (i.e., not a CHTC submit node).
+            Defaults to ``None``.
+        remote_schedd
+            The schedd to remote-submit jobs to.
+            Defaults to ``submit3.chtc.wisc.edu`.
         kwargs
             Additional keyword arguments,
             like ``cores`` or ``memory``,
@@ -93,10 +123,15 @@ class CHTCCluster(HTCondorCluster):
         """
 
         kwargs = self._modify_kwargs(
-            kwargs, worker_image=worker_image, gpu_lab=gpu_lab, gpus=gpus, batch_name=batch_name,
+            kwargs,
+            worker_image=worker_image,
+            gpu_lab=gpu_lab,
+            gpus=gpus,
+            batch_name=batch_name,
+            remote=remote,
         )
 
-        super().__init__(python=python, **kwargs)
+        super().__init__(python=python, remote=remote, remote_schedd=remote_schedd, **kwargs)
 
     @classmethod
     def _modify_kwargs(
@@ -107,6 +142,7 @@ class CHTCCluster(HTCondorCluster):
         gpu_lab: bool = False,
         gpus: Optional[int] = None,
         batch_name: Optional[str] = None,
+        remote: Optional[bool] = None,
     ) -> Dict[str, Any]:
         """
         This method implements the various special modifications we make to
@@ -127,7 +163,9 @@ class CHTCCluster(HTCondorCluster):
         # TODO: there are race conditions in port selection.
         # These get forwarded to the Dask scheduler.
         modified["scheduler_options"] = merge(
-            {"port": random_open_port(SCHEDULER_PORTS)},
+            {"port": random_open_port(SCHEDULER_PORTS)}
+            if not should_remote_submit(remote)
+            else None,
             # Capture anything the user passed in.
             kwargs.get(
                 "scheduler_options",
@@ -176,6 +214,8 @@ class CHTCCluster(HTCondorCluster):
             {"requirements": "(Target.HasCHTCStaging)"},
             # Support attributes to gather usage data.
             {"My.IsDaskWorker": "true"},
+            # Don't keep these jobs around after completing when doing a remote submit
+            {"leave_in_queue": "true"},
             # Capture anything the user passed in.
             kwargs.get("job_extra", dask.config.get(f"jobqueue.{cls.config_name}.job-extra")),
             # Overrideable utility/convenience attributes.
@@ -195,7 +235,7 @@ class CHTCCluster(HTCondorCluster):
             *kwargs.get("extra", dask.config.get(f"jobqueue.{cls.config_name}.extra")),
             # Bind to port inside the container, per dask_container_port above.
             "--listen-address",
-            f"tcp://0.0.0.0:{PORT_INSIDE_CONTAINER}",
+            f"tls://0.0.0.0:{PORT_INSIDE_CONTAINER}",
         ]
 
         return modified
