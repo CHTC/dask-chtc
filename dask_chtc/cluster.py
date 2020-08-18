@@ -215,7 +215,7 @@ class CHTCCluster(HTCondorCluster):
             # Support attributes to gather usage data.
             {"My.IsDaskWorker": "true"},
             # Don't keep these jobs around after completing when doing a remote submit
-            {"leave_in_queue": "true"},
+            {"leave_in_queue": "false"},
             # Capture anything the user passed in.
             kwargs.get("job_extra", dask.config.get(f"jobqueue.{cls.config_name}.job-extra")),
             # Overrideable utility/convenience attributes.
