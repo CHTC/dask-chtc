@@ -126,7 +126,7 @@ To install Dask-CHTC itself, run
 
 .. code-block:: console
 
-    $ pip install --upgrade git+https://github.com/JoshKarpel/dask-chtc.git
+    $ pip install --upgrade git+https://github.com/CHTC/dask-chtc.git
 
 To check that installation worked correctly, try running
 
@@ -137,7 +137,7 @@ To check that installation worked correctly, try running
 
 If you don't see the version message or some error occurs, try re-installing.
 If that fails, please
-`let us know <https://github.com/JoshKarpel/dask-chtc/issues>`_.
+`let us know <https://github.com/CHTC/dask-chtc/issues>`_.
 
 What's Next?
 ------------
