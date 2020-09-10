@@ -210,7 +210,7 @@ def start(jupyter_args):
     Extra arguments will be forwarded to Jupyter.
     For example, to start Jupyter Lab on some known port, you could run
 
-        dask-chtc jupyter run lab --port 3456
+        dask-chtc jupyter start lab --port 3456
     """
 
     manager = JupyterJobManager().start(jupyter_args)
